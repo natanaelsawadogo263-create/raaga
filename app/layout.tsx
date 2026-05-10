@@ -12,7 +12,23 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+/**
+ * URL canonique du site, utilisée pour résoudre les chemins relatifs
+ * (manifest, OpenGraph, sitemap…). Priorité :
+ *   1. NEXT_PUBLIC_SITE_URL (défini explicitement, ex: https://raaga.bf)
+ *   2. VERCEL_URL injecté automatiquement sur les déploiements Vercel
+ *   3. Fallback localhost en développement
+ */
+function resolveMetadataBase(): URL {
+  const explicit = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (explicit) return new URL(explicit);
+  const vercel = process.env.VERCEL_URL?.trim();
+  if (vercel) return new URL(vercel.startsWith("http") ? vercel : `https://${vercel}`);
+  return new URL("http://localhost:3000");
+}
+
 export const metadata: Metadata = {
+  metadataBase: resolveMetadataBase(),
   title: "Raaga | E-commerce et livraison locale",
   description:
     "Raaga est une plateforme e-commerce mobile-first adaptee au Burkina Faso pour commander, payer et suivre vos livraisons.",

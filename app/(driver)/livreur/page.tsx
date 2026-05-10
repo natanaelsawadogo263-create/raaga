@@ -171,7 +171,14 @@ export default async function LivreurDashboardPage({ searchParams }: PageProps) 
     ]);
     activeCustomer = cust ?? null;
     type ItemRow = { quantity: number; shops: { name: string } | { name: string }[] | null };
-    for (const it of (items ?? []) as ItemRow[]) {
+    /**
+     * Les types générés de Supabase déclarent `order_items.Relationships: []`
+     * (la FK vers shops est implicite via l'embed Postgres). On cast à travers
+     * `unknown` pour conserver un typage strict côté lecture sans bloquer le
+     * build.
+     */
+    const rows = (items ?? []) as unknown as ItemRow[];
+    for (const it of rows) {
       activeArticleCount += it.quantity;
       const s = Array.isArray(it.shops) ? it.shops[0] ?? null : it.shops;
       if (s && !activeShopName) activeShopName = s.name;

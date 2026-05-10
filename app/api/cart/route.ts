@@ -63,7 +63,7 @@ export async function GET() {
   const { data: products } = productIds.length
     ? await supabase
         .from("products")
-        .select("id, name, price_cfa, city, product_images ( image_url, is_primary, sort_order )")
+        .select("id, name, price_cfa, city, stock_quantity, product_images ( image_url, is_primary, sort_order )")
         .in("id", productIds)
     : { data: [] };
 
@@ -75,7 +75,7 @@ export async function GET() {
         return null;
       }
       const lineTotal = item.quantity * product.price_cfa;
-      const imgs = product.product_images as
+      const imgs = product.product_images as unknown as
         | { image_url: string; is_primary: boolean; sort_order: number }[]
         | null
         | undefined;

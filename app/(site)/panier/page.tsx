@@ -52,7 +52,7 @@ export default async function PanierPage() {
         return null;
       }
       const lineTotal = item.quantity * product.price_cfa;
-      const imgs = product.product_images as
+      const imgs = product.product_images as unknown as
         | { image_url: string; is_primary: boolean; sort_order: number }[]
         | null
         | undefined;
