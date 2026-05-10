@@ -1,26 +1,45 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #fffaf5;
+  --foreground: #1f2937;
+  --card: #ffffff;
+  --brand: #f97316;
+  --brand-contrast: #ffffff;
+  --muted: #f3f4f6;
+  --muted-foreground: #6b7280;
+  --border: #e5e7eb;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-brand: var(--brand);
+  --color-brand-contrast: var(--brand-contrast);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
+  background-image:
+    linear-gradient(rgba(31, 41, 55, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(31, 41, 55, 0.03) 1px, transparent 1px);
+  background-size: 56px 56px;
+  background-position: top left;
+  background-attachment: fixed;
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Ne pas faire `a { color: inherit }` : cela neutralise les couleurs Tailwind sur <Link>/className
+   lorsque le parent a text-white (boutons hero illisibles). */
+
+.container-raaga {
+  width: min(1120px, 100% - 2rem);
+  margin-inline: auto;
 }

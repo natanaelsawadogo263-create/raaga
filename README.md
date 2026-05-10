@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Raaga
 
-## Getting Started
+Raaga est une application e-commerce/livraison mobile-first construite avec Next.js et Supabase.
 
-First, run the development server:
+## Demarrage
+
+1) Installer les dependances:
+
+```bash
+npm install
+```
+
+2) Configurer les variables d'environnement:
+
+```bash
+cp .env.example .env.local
+```
+
+Puis renseigner les valeurs Supabase dans `.env.local`.
+
+3) Lancer le serveur:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Socle Supabase
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Migration SQL initiale: `supabase/migrations/20260506_initial_raaga.sql`
+- Migration complementaire auth/RLS: `supabase/migrations/20260506_auth_and_rls_fixes.sql`
+- Migration policies livreur: `supabase/migrations/20260506_driver_task_policies.sql`
+- Migration confirmation client livraison: `supabase/migrations/20260507_customer_delivery_confirmation.sql`
+- Client navigateur: `lib/supabase/client.ts`
+- Client serveur: `lib/supabase/server.ts`
+- Types DB (MVP): `lib/supabase/database.types.ts`
+- Server actions: `app/actions.ts` (auth, favoris, panier, commande)
+- Flux livreur connecte: `app/livreur/*` (taches, en-cours, disponibilite)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Ce que couvre la migration
 
-## Learn More
+- Profils utilisateurs et roles (`customer`, `driver`, `admin`, `super_admin`)
+- Validation livreur et documents KYC
+- Boutiques, produits, images produit
+- Favoris, panier persistant
+- Commandes, articles de commande, code secret livraison
+- Notifications, tickets support, logs d'activite
+- RLS de base pour securiser les acces par role
 
-To learn more about Next.js, take a look at the following resources:
+## Commandes utiles
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm run lint
+npm run build
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Deploiement
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Hebergement recommande: Vercel pour le frontend, Supabase pour backend/auth/database/storage.
