@@ -156,48 +156,6 @@ async function toAnySize(any512, size) {
   return sharp(any512).resize(size, size, { fit: "cover" }).png().toBuffer();
 }
 
-/**
- * Sépare le logo (cream/golden, teinte ~39°-50°) du fond orange (teinte ~10°-32°).
- * Produit un PNG à fond **transparent** : utilisé pour le splash screen PWA, où
- * seul le chariot/R apparaît sur le `background_color` blanc du manifest.
- */
-async function extractLogoOnTransparent(any512Buffer) {
-  const { data, info } = await sharp(any512Buffer)
-    .ensureAlpha()
-    .raw()
-    .toBuffer({ resolveWithObject: true });
-  const w = info.width;
-  const h = info.height;
-  const buf = Buffer.from(data);
-  for (let i = 0; i < buf.length; i += 4) {
-    const r = buf[i];
-    const g = buf[i + 1];
-    const b = buf[i + 2];
-    const max = Math.max(r, g, b);
-    if (max < 25) {
-      buf[i + 3] = 0;
-      continue;
-    }
-    const min = Math.min(r, g, b);
-    const d = max - min;
-    let hue = 0;
-    if (d > 0) {
-      if (max === r) hue = 60 * (((g - b) / d) % 6);
-      else if (max === g) hue = 60 * ((b - r) / d + 2);
-      else hue = 60 * ((r - g) / d + 4);
-      if (hue < 0) hue += 360;
-    }
-    // 0 sous 34° (fond orange), 1 au-dessus de 38° (logo). Antialias étroit
-    // pour éviter le halo sur le splash blanc.
-    const yellowness = Math.max(0, Math.min(1, (hue - 34) / 4));
-    buf[i + 3] = Math.round(yellowness * 255);
-  }
-  return sharp(buf, { raw: { width: w, height: h, channels: 4 } })
-    .flatten({ background: { r: 255, g: 255, b: 255 } })
-    .png({ compressionLevel: 9 })
-    .toBuffer();
-}
-
 async function toMaskable(any512, size) {
   const safe = Math.round(size * MASKABLE_INNER_RATIO);
   const logo = await sharp(any512).resize(safe, safe, { fit: "cover" }).png().toBuffer();
@@ -231,21 +189,17 @@ async function main() {
   const iconsDir = join(root, "public/icons");
   mkdirSync(iconsDir, { recursive: true });
 
-  // Icônes "any" → utilisées par Chrome pour le splash screen PWA. On fournit
-  // un logo sur fond BLANC opaque (qui se fond parfaitement dans le
-  // `background_color: #FFFFFF` du manifest, donc aucune tuile orange ni halo).
-  const splash512 = await extractLogoOnTransparent(any512);
-  const splash192 = await sharp(splash512)
-    .resize(192, 192, { fit: "contain", background: { r: 255, g: 255, b: 255 } })
-    .png()
-    .toBuffer();
-
-  writeFileSync(join(iconsDir, "icon-512.png"), splash512);
-  writeFileSync(join(iconsDir, "icon-192.png"), splash192);
-  // Icônes home-screen Android (adaptive launcher) → restent en tuile orange.
+  // Toutes les tailles utilisent la tuile orange propre (logo cream/golden
+  // centré sur le dégradé orange) :
+  //  - icon-* (purpose: any)         → app icon home-screen + tuile centrée
+  //                                    sur le splash screen blanc.
+  //  - icon-maskable-*               → adaptive icon Android (zone sûre 80%).
+  //  - apple-touch-icon              → iOS home-screen.
+  //  - app/icon.png                  → favicon onglet navigateur.
+  writeFileSync(join(iconsDir, "icon-512.png"), any512);
+  writeFileSync(join(iconsDir, "icon-192.png"), await toAnySize(any512, 192));
   writeFileSync(join(iconsDir, "icon-maskable-512.png"), await toMaskable(any512, 512));
   writeFileSync(join(iconsDir, "icon-maskable-192.png"), await toMaskable(any512, 192));
-  // iOS home-screen + favicon onglet → tuile orange (inchangé).
   writeFileSync(join(iconsDir, "apple-touch-icon.png"), await toAnySize(any512, 180));
   writeFileSync(join(root, "app/icon.png"), any512);
 
