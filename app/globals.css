@@ -4,7 +4,7 @@
   --background: #fffaf5;
   --foreground: #1f2937;
   --card: #ffffff;
-  --brand: #f97316;
+  --brand: #ff7a00;
   --brand-contrast: #ffffff;
   --muted: #f3f4f6;
   --muted-foreground: #6b7280;
@@ -24,6 +24,15 @@
   --font-mono: var(--font-geist-mono);
 }
 
+html {
+  /* Fond orange de marque : visible derrière le safe-area-inset (notches iOS),
+     pendant l'overscroll (rubber-band) et avant que la CSS du body ne soit
+     appliquée. Évite les bandes blanches au lancement de la PWA. */
+  background-color: var(--brand);
+  /* Bloque les zooms accidentels en pinch (rendu plus proche d'une vraie app). */
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   background: var(--background);
   background-image:
@@ -34,6 +43,12 @@ body {
   background-attachment: fixed;
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  /* Empêche le rubber-band horizontal qui révèle le fond blanc sur iOS. */
+  overscroll-behavior-x: contain;
+  /* Respecte les zones sûres (notches / dynamic island / barre gestes Android) :
+     le fond orange du <html> remplit ces bords au lieu du blanc. */
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 
 /* Ne pas faire `a { color: inherit }` : cela neutralise les couleurs Tailwind sur <Link>/className
