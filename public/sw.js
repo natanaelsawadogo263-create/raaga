@@ -8,7 +8,7 @@
  *  - prise de contrôle immédiate (skipWaiting + clients.claim) pour éviter
  *    les états bloqués entre versions.
  */
-const VERSION = "raaga-v6";
+const VERSION = "raaga-v9";
 const PRECACHE = [
   "/",
   "/manifest.webmanifest",

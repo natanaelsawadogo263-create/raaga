@@ -3,9 +3,9 @@
  *
  * Hypothèses sur la source :
  *  - PNG carré, fond orange plein (gradient), logo R/chariot centré.
- *  - Les coins (hors du carré arrondi) peuvent être blancs ; on les remplace
- *    par le orange de marque pour que l'icône remplisse vraiment l'espace
- *    sur les lanceurs Android qui n'appliquent pas de masque.
+ *  - Les zones hors carré arrondi (damier Photoshop, blanc, transparence) sont
+ *    reliées au bord du fichier : on les remplace par un flood-fill depuis
+ *    tout le périmètre jusqu’au vrai fond orange (sans traverser le logo).
  *
  * Sorties :
  *  - public/icons/icon-{192,512}.png            (purpose: any)
@@ -26,6 +26,36 @@ const BRAND = { r: 255, g: 122, b: 0 };
 const CORNER_RING_START = 0.86;
 /** Taille du logo dans l'icône maskable (zone sûre adaptive icon ≈ 80 %). */
 const MASKABLE_INNER_RATIO = 0.8;
+
+function rgbSpread(r, g, b) {
+  return Math.max(r, g, b) - Math.min(r, g, b);
+}
+
+/**
+ * Fond orange du carré arrondi (dégradé) : le flood s'arrête ici pour ne pas
+ * « manger » l'intérieur de l'icône.
+ */
+function isWarmBackgroundOrange(r, g, b) {
+  if (r < 125) return false;
+  if (b > 155) return false;
+  if (r - b < 40) return false;
+  if (g < 35) return false;
+  return true;
+}
+
+/**
+ * Damier / transparence / blanc autour du carré arrondi.
+ */
+function isArtifactPixel(r, g, b, a) {
+  if (a < 250) return true;
+  if (r > 248 && g > 248 && b > 248) return true;
+  const spread = rgbSpread(r, g, b);
+  const avg = (r + g + b) / 3;
+  if (spread > 42) return false;
+  if (avg < 105) return false;
+  if (avg > 252) return true;
+  return avg > 105 && spread < 26;
+}
 
 /**
  * Remplace les pixels quasi-blancs proches d'un coin par le orange de marque.
@@ -63,6 +93,65 @@ async function fillCornersBrand(srcBuffer) {
   return sharp(buf, { raw: { width: w, height: h, channels: 4 } }).png().toBuffer();
 }
 
+/**
+ * Supprime le damier gris/blanc (souvent pixels opaques export Photoshop) en
+ * inondant depuis tout le bord de l'image jusqu'au vrai fond orange — ne traverse
+ * pas le logo. (Seeding uniquement depuis les 4 coins peut échouer si le coin
+ * est déjà orange anti-alias.)
+ */
+async function floodRemoveOuterArtifacts(rgbBuffer) {
+  const { data, info } = await sharp(rgbBuffer)
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  const w = info.width;
+  const h = info.height;
+  const buf = Buffer.from(data);
+  const visited = new Uint8Array(w * h);
+
+  function idx(x, y) {
+    return (y * w + x) * 4;
+  }
+
+  const stack = [];
+  for (let x = 0; x < w; x++) {
+    stack.push([x, 0], [x, h - 1]);
+  }
+  for (let y = 0; y < h; y++) {
+    stack.push([0, y], [w - 1, y]);
+  }
+
+  while (stack.length) {
+    const [x, y] = stack.pop();
+    if (x < 0 || y < 0 || x >= w || y >= h) continue;
+    const vi = y * w + x;
+    if (visited[vi]) continue;
+    visited[vi] = 1;
+
+    const i = idx(x, y);
+    const r = buf[i];
+    const g = buf[i + 1];
+    const b = buf[i + 2];
+    const a = buf[i + 3];
+
+    if (isWarmBackgroundOrange(r, g, b) && a >= 250) continue;
+
+    if (!isArtifactPixel(r, g, b, a)) continue;
+
+    buf[i] = BRAND.r;
+    buf[i + 1] = BRAND.g;
+    buf[i + 2] = BRAND.b;
+    buf[i + 3] = 255;
+
+    stack.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
+  }
+
+  return sharp(buf, { raw: { width: w, height: h, channels: 4 } })
+    .removeAlpha()
+    .png({ compressionLevel: 9 })
+    .toBuffer();
+}
+
 async function toAnySize(any512, size) {
   return sharp(any512).resize(size, size, { fit: "cover" }).png().toBuffer();
 }
@@ -89,11 +178,13 @@ async function main() {
   }
   const srcBuf = readFileSync(SRC);
   const cleaned = await fillCornersBrand(srcBuf);
-  const any512 = await sharp(cleaned)
-    .resize(512, 512, { fit: "cover" })
-    .flatten({ background: { r: BRAND.r, g: BRAND.g, b: BRAND.b } })
-    .png()
-    .toBuffer();
+  const any512 = await floodRemoveOuterArtifacts(
+    await sharp(cleaned)
+      .resize(512, 512, { fit: "cover" })
+      .flatten({ background: { r: BRAND.r, g: BRAND.g, b: BRAND.b } })
+      .png()
+      .toBuffer(),
+  );
 
   const iconsDir = join(root, "public/icons");
   mkdirSync(iconsDir, { recursive: true });
