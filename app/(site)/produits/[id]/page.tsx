@@ -5,7 +5,6 @@ import { Heart, ListChecks, Truck } from "lucide-react";
 import { addToFavoritesAction } from "@/app/actions";
 import { CatalogBreadcrumbs } from "@/components/catalog/catalog-breadcrumbs";
 import { CatalogProductCard } from "@/components/catalog-product-card";
-import { CatalogTrustStrip } from "@/components/catalog/catalog-trust-strip";
 import { ProductGallery } from "@/components/product-gallery";
 import { ProductPromoPrices } from "@/components/product-promo-prices";
 import { ProductQuantityAdd } from "@/components/product-quantity-add";
@@ -165,9 +164,6 @@ export default async function ProductDetailPage({ params }: Props) {
           </section>
         ) : null}
 
-        <div className="mt-10 sm:mt-12">
-          <CatalogTrustStrip />
-        </div>
       </div>
     </PageShell>
   );

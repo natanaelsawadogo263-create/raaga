@@ -21,12 +21,7 @@ export default async function CommandePage() {
   return (
     <PageShell>
       <div className="container-raaga py-6 sm:py-10">
-        <PageHeader
-          align="center"
-          eyebrow="Checkout"
-          title="Finaliser la commande"
-          description="Confirmez l’adresse de livraison. Paiement en espèces à la remise du colis. Frais de base : 1 000 FCFA."
-        />
+        <PageHeader align="center" eyebrow="Checkout" title="Finaliser la commande" />
 
         <RaCard className="mx-auto w-full max-w-2xl" padding="p-6 sm:p-8">
           <SyncGuestCartForCheckout>

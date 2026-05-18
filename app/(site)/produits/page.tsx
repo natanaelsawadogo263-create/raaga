@@ -8,9 +8,6 @@ import {
 import { fetchCatalogProducts } from "@/lib/catalog-products";
 import { CatalogPagination } from "@/components/catalog/catalog-pagination";
 import { CatalogResultsSummary } from "@/components/catalog/catalog-results-summary";
-import { CatalogSortBar } from "@/components/catalog/catalog-sort-bar";
-import { CatalogStorefrontHero } from "@/components/catalog/catalog-storefront-hero";
-import { CatalogTrustStrip } from "@/components/catalog/catalog-trust-strip";
 import { CatalogProductCard } from "@/components/catalog-product-card";
 import { PageShell, RaCard } from "@/components/raaga/page-shell";
 import Link from "next/link";
@@ -47,21 +44,9 @@ export default async function ProduitsPage({ searchParams }: ProduitsPageProps) 
   return (
     <PageShell>
       <div className="mx-auto w-[min(1320px,calc(100%-2rem))] py-6 sm:py-10">
-        <CatalogStorefrontHero
-          title="La boutique Raaga"
-          description="Parcourez le catalogue : fiches détaillées, ajout au panier en un geste et livraison suivie."
-          totalSkus={allProducts.length}
-          crumbs={[{ label: "Produits" }]}
-        />
-
-        <div className="mt-10">
-          <CatalogTrustStrip />
-        </div>
-
-        <div className="mt-12 min-w-0">
+        <div className="min-w-0">
           {products.length ? (
             <>
-              <CatalogSortBar state={viewState} />
               <CatalogResultsSummary totalFiltered={filtered.length} page={page} />
               <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
                 {products.map((product) => (
