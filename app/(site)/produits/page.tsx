@@ -19,10 +19,9 @@ type ProduitsPageProps = {
 export default async function ProduitsPage({ searchParams }: ProduitsPageProps) {
   const sp = await searchParams;
   const raw = parseCatalogParams(sp);
-  /** Sans filtres catalogue : catégorie, prix et stock ne s’appliquent plus (tri + pagination + recherche `q` uniquement). */
+  /** Prix et stock : filtres désactivés côté catalogue public ; catégorie et recherche `q` restent actifs. */
   const state: CatalogUrlState = {
     ...raw,
-    cat: "",
     min: null,
     max: null,
     stock: "all",

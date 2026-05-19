@@ -1,4 +1,4 @@
-import { categoryShowcases } from "@/lib/raaga-data";
+import { produitsHref } from "@/lib/catalog-query";
 import { tryGetSupabaseServerClient } from "@/lib/supabase/server";
 
 export type HomeCategoryCard = {
@@ -8,17 +8,12 @@ export type HomeCategoryCard = {
   href: string;
 };
 
-/** Cartes « univers » pour la page d’accueil : DB si dispo, sinon données statiques. */
+const DEFAULT_CATEGORY_IMAGE = "/banner.png";
+
+/** Cartes catégories pour l’accueil : uniquement les catégories actives créées dans l’admin. */
 export async function fetchHomeCategoryCards(): Promise<HomeCategoryCard[]> {
   const supabase = await tryGetSupabaseServerClient();
-  if (!supabase) {
-    return categoryShowcases.map((c) => ({
-      name: c.name,
-      imageUrl: c.imageUrl,
-      imageAlt: c.imageAlt,
-      href: `/produits?q=${encodeURIComponent(c.name)}`,
-    }));
-  }
+  if (!supabase) return [];
 
   const { data, error } = await supabase
     .from("categories")
@@ -28,23 +23,23 @@ export async function fetchHomeCategoryCards(): Promise<HomeCategoryCard[]> {
     .order("name", { ascending: true })
     .limit(24);
 
-  if (error || !data?.length) {
-    return categoryShowcases.map((c) => ({
-      name: c.name,
-      imageUrl: c.imageUrl,
-      imageAlt: c.imageAlt,
-      href: `/produits?q=${encodeURIComponent(c.name)}`,
-    }));
-  }
+  if (error || !data?.length) return [];
 
-  return data.map((row, i) => {
-    const fb = categoryShowcases[i % categoryShowcases.length];
-    const imageUrl = row.image_url?.trim() || fb.imageUrl;
+  return data.map((row) => {
+    const name = row.name.trim();
     return {
-      name: row.name,
-      imageUrl,
-      imageAlt: row.name,
-      href: `/produits?q=${encodeURIComponent(row.name)}`,
+      name,
+      imageUrl: row.image_url?.trim() || DEFAULT_CATEGORY_IMAGE,
+      imageAlt: name,
+      href: produitsHref({
+        q: "",
+        page: 1,
+        cat: name,
+        min: null,
+        max: null,
+        sort: "recent",
+        stock: "all",
+      }),
     };
   });
 }
