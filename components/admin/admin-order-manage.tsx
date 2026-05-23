@@ -11,6 +11,9 @@ import type { AdminOrderDetail, AdminProductPickerItem } from "@/lib/admin/data"
 import { formatCFA, formatOrderDate } from "@/lib/admin/format";
 import { orderStatusLabel, paymentMethodLabel } from "@/lib/admin/order-labels";
 import { adminCrudIconBtn } from "@/components/admin/admin-crud-icon-classes";
+import { OrderDiscussionPanel } from "@/components/order-discussion-panel";
+import { HEAVY_DELIVERY_MESSAGE } from "@/lib/heavy-product";
+import type { OrderDiscussionData } from "@/lib/order-discussion";
 
 function fieldClass() {
   return "mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-[#FF7A00] focus:ring-2 focus:ring-[#FF7A00]/20";
@@ -31,10 +34,14 @@ export function AdminOrderManage({
   detail,
   products,
   flash,
+  discussion,
+  adminUserId,
 }: {
   detail: AdminOrderDetail;
   products: AdminProductPickerItem[];
   flash?: { ok?: string; error?: string };
+  discussion?: OrderDiscussionData | null;
+  adminUserId: string;
 }) {
   const { order, customer, driver, items } = detail;
 
@@ -287,6 +294,40 @@ export function AdminOrderManage({
           </button>
         </form>
       </div>
+
+      {order.has_heavy_items ? (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <p className="font-bold">Commande poids lourd</p>
+          <p className="mt-1 text-xs leading-relaxed">{HEAVY_DELIVERY_MESSAGE}</p>
+        </div>
+      ) : null}
+
+      {discussion ? (
+        <OrderDiscussionPanel
+          discussionId={discussion.discussionId}
+          messages={discussion.messages}
+          viewerUserId={adminUserId}
+          returnTo={`/admin/commandes/${order.id}`}
+          variant="admin"
+          title={
+            order.has_heavy_items
+              ? "Discussion avec le client"
+              : order.driver_id
+                ? "Discussion client ↔ livreur"
+                : "Discussion commande"
+          }
+          hint={
+            order.has_heavy_items
+              ? "Répondez au client pour la livraison ou le retrait spécial."
+              : "Suivi des échanges entre le client et le livreur assigné. Vous pouvez intervenir si besoin."
+          }
+          placeholder="Message à destination du client ou en complément du livreur…"
+        />
+      ) : (
+        <p className="text-sm text-slate-600">
+          Discussion indisponible — appliquez la migration Supabase des discussions commande.
+        </p>
+      )}
 
       <div className="rounded-2xl border border-rose-200/80 bg-rose-50/40 p-5 shadow-sm">
         <div className="flex items-start gap-3">

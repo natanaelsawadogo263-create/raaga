@@ -18,6 +18,9 @@ import {
   btnPrimaryClass,
   textareaClass,
 } from "@/components/raaga/page-shell";
+import { OrderDiscussionPanel } from "@/components/order-discussion-panel";
+import { HEAVY_DELIVERY_MESSAGE } from "@/lib/heavy-product";
+import { fetchOrderDiscussionByOrderId } from "@/lib/order-discussion";
 import { requireRole } from "@/lib/auth-guards";
 
 export const dynamic = "force-dynamic";
@@ -54,6 +57,7 @@ type SuiviOrderRow = {
   order_status: string;
   total_cfa: number;
   delivery_secret_code: string;
+  has_heavy_items: boolean;
   created_at: string;
   order_items: SuiviOrderItem[] | null;
 };
@@ -90,6 +94,7 @@ const ORDER_SELECT = `
   order_status,
   total_cfa,
   delivery_secret_code,
+  has_heavy_items,
   created_at,
   order_items (
     id,
@@ -121,6 +126,8 @@ export default async function SuiviPage({ searchParams }: SuiviPageProps) {
 
   const order = (rows?.[0] as SuiviOrderRow | undefined) ?? null;
 
+  const discussion = order ? await fetchOrderDiscussionByOrderId(supabase, order.id) : null;
+
   let suiviDriver: {
     first_name: string;
     last_name: string;
@@ -150,8 +157,15 @@ export default async function SuiviPage({ searchParams }: SuiviPageProps) {
           {order ? (
             <>
               {/* Articles + code */}
-              <div className="grid grid-cols-1 gap-3 lg:grid-cols-5 lg:gap-4">
-                <RaCard className="rounded-2xl border-border/50 shadow-md lg:col-span-3" padding="p-4 sm:p-5">
+              <div
+                className={`grid grid-cols-1 gap-3 lg:gap-4 ${
+                  order.has_heavy_items ? "" : "lg:grid-cols-5"
+                }`}
+              >
+                <RaCard
+                  className={`rounded-2xl border-border/50 shadow-md ${order.has_heavy_items ? "" : "lg:col-span-3"}`}
+                  padding="p-4 sm:p-5"
+                >
                   <p className="mb-2 text-sm text-muted-foreground">
                     Réf.{" "}
                     <span className="font-mono font-bold tabular-nums text-foreground" translate="no">
@@ -206,27 +220,66 @@ export default async function SuiviPage({ searchParams }: SuiviPageProps) {
                   </ul>
                 </RaCard>
 
-                <RaCard className="rounded-2xl border-border/50 shadow-md lg:col-span-2" padding="p-4 sm:p-5">
-                  <div className="flex items-center gap-2">
-                    <IconTile>
-                      <KeyRound className="h-4 w-4" strokeWidth={1.75} aria-hidden />
-                    </IconTile>
-                    <h2 className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">
-                      Code de confirmation
-                    </h2>
-                  </div>
-                  <div className="mt-3 flex justify-center gap-2" translate="no">
-                    {digits.map((ch, i) => (
-                      <div
-                        key={i}
-                        className="flex h-12 w-10 items-center justify-center rounded-lg border border-border/70 bg-card text-lg font-black tabular-nums text-foreground shadow-sm sm:h-14 sm:w-12 sm:text-xl"
-                      >
-                        {ch || "—"}
-                      </div>
-                    ))}
-                  </div>
-                </RaCard>
+                {!order.has_heavy_items ? (
+                  <RaCard className="rounded-2xl border-border/50 shadow-md lg:col-span-2" padding="p-4 sm:p-5">
+                    <div className="flex items-center gap-2">
+                      <IconTile>
+                        <KeyRound className="h-4 w-4" strokeWidth={1.75} aria-hidden />
+                      </IconTile>
+                      <h2 className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">
+                        Code de confirmation
+                      </h2>
+                    </div>
+                    <div className="mt-3 flex justify-center gap-2" translate="no">
+                      {digits.map((ch, i) => (
+                        <div
+                          key={i}
+                          className="flex h-12 w-10 items-center justify-center rounded-lg border border-border/70 bg-card text-lg font-black tabular-nums text-foreground shadow-sm sm:h-14 sm:w-12 sm:text-xl"
+                        >
+                          {ch || "—"}
+                        </div>
+                      ))}
+                    </div>
+                  </RaCard>
+                ) : null}
               </div>
+
+              {order.has_heavy_items ? (
+                <RaCard className="rounded-2xl border-amber-200/60 shadow-md" padding="p-4 sm:p-5">
+                  <p className="text-sm font-bold text-amber-950">Commande poids lourd</p>
+                  <p className="mt-1 text-xs leading-relaxed text-amber-900/90 sm:text-sm">
+                    {HEAVY_DELIVERY_MESSAGE}
+                  </p>
+                </RaCard>
+              ) : null}
+
+              {discussion ? (
+                <OrderDiscussionPanel
+                  discussionId={discussion.discussionId}
+                  messages={discussion.messages}
+                  viewerUserId={user.id}
+                  returnTo={orderId ? `/suivi?orderId=${order.id}` : "/suivi"}
+                  title={
+                    order.has_heavy_items
+                      ? "Discussion avec Raaga"
+                      : order.driver_id
+                        ? "Discussion avec votre livreur"
+                        : "Discussion livraison"
+                  }
+                  hint={
+                    order.has_heavy_items
+                      ? "Organisez la récupération ou la livraison spéciale avec l’équipe Raaga."
+                      : order.driver_id
+                        ? "Échangez avec votre livreur (adresse, créneau, instructions…)."
+                        : "Vous pouvez écrire dès maintenant ; votre livreur répondra dès qu’il aura accepté la course."
+                  }
+                  placeholder={
+                    order.has_heavy_items
+                      ? "Ex. retrait en boutique, créneau souhaité…"
+                      : "Ex. code portail, point de repère, créneau de disponibilité…"
+                  }
+                />
+              ) : null}
 
               {suiviDriver ? (
                 <RaCard className="rounded-2xl border-border/50 shadow-md" padding="p-4 sm:p-5">
@@ -277,7 +330,7 @@ export default async function SuiviPage({ searchParams }: SuiviPageProps) {
                 </RaCard>
               ) : null}
 
-              {/* 3 — Étapes */}
+              {!order.has_heavy_items ? (
               <RaCard className="rounded-2xl border-border/50 shadow-md" padding="p-4 sm:p-5">
                 <div className="flex items-center gap-2">
                   <IconTile>
@@ -341,8 +394,10 @@ export default async function SuiviPage({ searchParams }: SuiviPageProps) {
                   </ol>
                 </div>
               </RaCard>
+              ) : null}
 
-              {["secret_validated", "delivery_declared"].includes(order.order_status) ? (
+              {!order.has_heavy_items &&
+              ["secret_validated", "delivery_declared"].includes(order.order_status) ? (
                 <RaCard className="rounded-2xl border-border/50 shadow-md" padding="p-4 sm:p-5">
                   <p className="text-center text-base font-bold text-foreground">Confirmation finale</p>
                   <p className="mx-auto mt-1.5 max-w-lg text-center text-sm leading-relaxed text-muted-foreground">

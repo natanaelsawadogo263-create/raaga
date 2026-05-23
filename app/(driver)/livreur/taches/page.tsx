@@ -1,7 +1,9 @@
 import { ChevronRight, Package, ShoppingBag, Store } from "lucide-react";
 import { acceptDeliveryTaskAction } from "@/app/actions";
+import { DriverTaskPackageImages } from "@/components/livreur/driver-task-package-images";
 import { OrderStatusBadge } from "@/components/order-status-badge";
 import { requireRole } from "@/lib/auth-guards";
+import { fetchDriverTaskItemsByOrderIds } from "@/lib/driver-task-items";
 import { paymentMethodLabel } from "@/lib/admin/order-labels";
 import { formatCFA } from "@/lib/admin/format";
 
@@ -44,24 +46,10 @@ export default async function LivreurTachesPage() {
   const taskList = tasks ?? [];
 
   const orderIds = taskList.map((t) => t.id);
-  type TaskItem = {
-    order_id: string;
-    quantity: number;
-    products: { name: string } | { name: string }[] | null;
-    shops: { name: string; city: string } | { name: string; city: string }[] | null;
-  };
-  const itemsByOrder = new Map<string, TaskItem[]>();
-  if (orderIds.length > 0) {
-    const { data: items } = await supabase
-      .from("order_items")
-      .select("order_id, quantity, products ( name ), shops ( name, city )")
-      .in("order_id", orderIds);
-    for (const it of (items ?? []) as unknown as TaskItem[]) {
-      const arr = itemsByOrder.get(it.order_id) ?? [];
-      arr.push(it);
-      itemsByOrder.set(it.order_id, arr);
-    }
-  }
+  const { itemsByOrder, packageLinesByOrder } = await fetchDriverTaskItemsByOrderIds(
+    supabase,
+    orderIds,
+  );
 
   function pickOne<T>(raw: T | T[] | null): T | null {
     if (!raw) return null;
@@ -156,20 +144,25 @@ export default async function LivreurTachesPage() {
                       ) : null}
 
                       {items.length > 0 ? (
-                        <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-600">
-                          {items.map((it, i) => {
-                            const p = pickOne(it.products);
-                            return (
-                              <li key={`${task.id}-${i}`} className="flex items-center gap-1.5">
-                                <Package className="h-3 w-3 shrink-0 text-[#FF7A00]" aria-hidden />
-                                <span>
-                                  <span className="font-bold text-slate-900">×{it.quantity}</span>{" "}
-                                  {p?.name ?? "Article"}
-                                </span>
-                              </li>
-                            );
-                          })}
-                        </ul>
+                        <>
+                          <DriverTaskPackageImages
+                            lines={packageLinesByOrder.get(task.id) ?? []}
+                          />
+                          <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-600">
+                            {items.map((it, i) => {
+                              const p = pickOne(it.products);
+                              return (
+                                <li key={`${task.id}-${i}`} className="flex items-center gap-1.5">
+                                  <Package className="h-3 w-3 shrink-0 text-[#FF7A00]" aria-hidden />
+                                  <span>
+                                    <span className="font-bold text-slate-900">×{it.quantity}</span>{" "}
+                                    {p?.name ?? "Article"}
+                                  </span>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </>
                       ) : null}
 
                       <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1">

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { pickPrimaryImage } from "@/lib/catalog-products";
+import { cartHasHeavyProduct, computeCartDelivery } from "@/lib/heavy-product";
 import { tryGetSupabaseServerClient } from "@/lib/supabase/server";
 
 export type CartApiLine = {
@@ -21,6 +22,8 @@ export type CartApiResponse = {
   subtotal: number;
   deliveryFee: number;
   total: number;
+  /** Message livraison poids lourd (remplace le montant affiché). */
+  deliveryLabel?: string | null;
   /** Panier invité : enrichissement côté client via POST /api/cart/preview. */
   guest?: boolean;
 };
@@ -63,7 +66,7 @@ export async function GET() {
   const { data: products } = productIds.length
     ? await supabase
         .from("products")
-        .select("id, name, price_cfa, city, stock_quantity, product_images ( image_url, is_primary, sort_order )")
+        .select("id, name, price_cfa, city, stock_quantity, is_heavy, product_images ( image_url, is_primary, sort_order )")
         .in("id", productIds)
     : { data: [] };
 
@@ -94,9 +97,16 @@ export async function GET() {
     .filter((line): line is CartApiLine => line !== null);
 
   const subtotal = items.reduce((sum, line) => sum + line.lineTotal, 0);
-  const deliveryFee = items.length ? 1000 : 0;
-  const total = subtotal + deliveryFee;
+  const hasHeavyItems = cartHasHeavyProduct(products ?? []);
+  const delivery = computeCartDelivery(hasHeavyItems, items.length);
+  const total = subtotal + delivery.deliveryFeeCfa;
 
-  const body: CartApiResponse = { items, subtotal, deliveryFee, total };
+  const body: CartApiResponse = {
+    items,
+    subtotal,
+    deliveryFee: delivery.deliveryFeeCfa,
+    deliveryLabel: delivery.deliveryLabel,
+    total,
+  };
   return NextResponse.json(body);
 }

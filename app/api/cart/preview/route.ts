@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { CartApiLine, CartApiResponse } from "@/app/api/cart/route";
 import { pickPrimaryImage } from "@/lib/catalog-products";
+import { cartHasHeavyProduct, computeCartDelivery } from "@/lib/heavy-product";
 import { tryGetSupabaseServerClient } from "@/lib/supabase/server";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -47,7 +48,7 @@ export async function POST(req: Request) {
   const productIds = [...new Set(lines.map((l) => l.product_id))];
   const { data: products, error } = await supabase
     .from("products")
-    .select("id, name, price_cfa, city, stock_quantity, product_images ( image_url, is_primary, sort_order )")
+    .select("id, name, price_cfa, city, stock_quantity, is_heavy, product_images ( image_url, is_primary, sort_order )")
     .in("id", productIds)
     .eq("is_active", true);
 
@@ -81,8 +82,16 @@ export async function POST(req: Request) {
   }
 
   const subtotal = items.reduce((sum, line) => sum + line.lineTotal, 0);
-  const deliveryFee = items.length ? 1000 : 0;
-  const total = subtotal + deliveryFee;
-  const response: CartApiResponse = { items, subtotal, deliveryFee, total, guest: true };
+  const hasHeavyItems = cartHasHeavyProduct(products ?? []);
+  const delivery = computeCartDelivery(hasHeavyItems, items.length);
+  const total = subtotal + delivery.deliveryFeeCfa;
+  const response: CartApiResponse = {
+    items,
+    subtotal,
+    deliveryFee: delivery.deliveryFeeCfa,
+    deliveryLabel: delivery.deliveryLabel,
+    total,
+    guest: true,
+  };
   return NextResponse.json(response);
 }

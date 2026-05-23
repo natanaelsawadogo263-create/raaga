@@ -13,7 +13,9 @@ import {
   cartQtyStepperBtnClass,
   cartQtyStepperWrapClass,
 } from "@/components/raaga/page-shell";
+import { CartDeliveryLine } from "@/components/cart-delivery-line";
 import { pickPrimaryImage } from "@/lib/catalog-products";
+import { cartHasHeavyProduct, computeCartDelivery } from "@/lib/heavy-product";
 import { requireRole } from "@/lib/auth-guards";
 import { getSiteCartBadge } from "@/lib/site-cart-server";
 
@@ -40,7 +42,7 @@ export default async function PanierPage() {
   const { data: products } = productIds.length
     ? await supabase
         .from("products")
-        .select("id, name, price_cfa, city, stock_quantity, product_images ( image_url, is_primary, sort_order )")
+        .select("id, name, price_cfa, city, stock_quantity, is_heavy, product_images ( image_url, is_primary, sort_order )")
         .in("id", productIds)
     : { data: [] };
 
@@ -62,7 +64,10 @@ export default async function PanierPage() {
     .filter((item): item is NonNullable<typeof item> => item !== null);
 
   const subtotal = enriched.reduce((sum, item) => sum + item.lineTotal, 0);
-  const deliveryFee = enriched.length ? 1000 : 0;
+  const hasHeavyItems = cartHasHeavyProduct(products ?? []);
+  const delivery = computeCartDelivery(hasHeavyItems, enriched.length);
+  const deliveryFee = delivery.deliveryFeeCfa;
+  const deliveryLabel = delivery.deliveryLabel;
   const total = subtotal + deliveryFee;
 
   return (
@@ -160,10 +165,7 @@ export default async function PanierPage() {
                     <span className="text-muted-foreground">Sous-total</span>
                     <span className="font-semibold tabular-nums">{subtotal.toLocaleString("fr-FR")} FCFA</span>
                   </p>
-                  <p className="flex justify-between gap-4">
-                    <span className="text-muted-foreground">Livraison</span>
-                    <span className="font-semibold tabular-nums">{deliveryFee.toLocaleString("fr-FR")} FCFA</span>
-                  </p>
+                  <CartDeliveryLine deliveryFee={deliveryFee} deliveryLabel={deliveryLabel} />
                   <div className="border-t border-border pt-3">
                     <p className="flex justify-between gap-4 text-base font-black">
                       <span>Total</span>
@@ -175,7 +177,9 @@ export default async function PanierPage() {
                   Passer la commande
                 </Link>
                 <p className="mt-3 text-center text-[11px] text-muted-foreground">
-                  Paiement en espèces à la livraison, lorsque le livreur vous remet la commande.
+                  {hasHeavyItems
+                    ? "Après commande, échangez avec Raaga pour organiser la livraison ou le retrait."
+                    : "Paiement en espèces à la livraison, lorsque le livreur vous remet la commande."}
                 </p>
               </RaCard>
             </aside>

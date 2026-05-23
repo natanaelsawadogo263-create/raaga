@@ -22,7 +22,9 @@ import { OrderStatusBadge } from "@/components/order-status-badge";
 import { SecretCodeInput } from "@/components/livreur/secret-code-input";
 import { requireRole } from "@/lib/auth-guards";
 import { paymentMethodLabel } from "@/lib/admin/order-labels";
+import { OrderDiscussionPanel } from "@/components/order-discussion-panel";
 import { formatCFA } from "@/lib/admin/format";
+import { fetchOrderDiscussionByOrderId } from "@/lib/order-discussion";
 
 export const dynamic = "force-dynamic";
 
@@ -168,6 +170,8 @@ export default async function LivreurEnCoursPage({ searchParams }: PageProps) {
   ]);
 
   const items = (itemsRaw ?? []) as unknown as LineItem[];
+
+  const discussion = await fetchOrderDiscussionByOrderId(supabase, order.id);
 
   const shopsMap = new Map<
     string,
@@ -326,6 +330,20 @@ export default async function LivreurEnCoursPage({ searchParams }: PageProps) {
           </p>
         ) : null}
       </section>
+
+      {discussion ? (
+        <OrderDiscussionPanel
+          discussionId={discussion.discussionId}
+          messages={discussion.messages}
+          viewerUserId={user.id}
+          returnTo="/livreur/en-cours"
+          variant="driver"
+          title="Discussion avec le client"
+          hint="Coordonnez l’adresse, le créneau ou des instructions de livraison."
+          placeholder="Ex. je suis en route, je suis devant le portail bleu…"
+          emptyHint="Le client peut vous écrire ici. Répondez-lui pour coordonner la livraison."
+        />
+      ) : null}
 
       <div className="grid gap-4 lg:grid-cols-2">
         <section className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-5">

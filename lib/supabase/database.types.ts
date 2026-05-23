@@ -105,6 +105,7 @@ export type Database = {
           low_stock_threshold: number;
           status: "normal" | "promotion" | "nouveaute" | "best_seller" | "rupture";
           is_active: boolean;
+          is_heavy: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -123,6 +124,7 @@ export type Database = {
           low_stock_threshold?: number;
           status?: "normal" | "promotion" | "nouveaute" | "best_seller" | "rupture";
           is_active?: boolean;
+          is_heavy?: boolean;
         };
         Update: Partial<Database["public"]["Tables"]["products"]["Insert"]>;
         Relationships: [];
@@ -160,6 +162,7 @@ export type Database = {
           sector: string;
           delivery_address: string;
           promo_code_id: string | null;
+          has_heavy_items: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -194,8 +197,41 @@ export type Database = {
           sector: string;
           delivery_address: string;
           promo_code_id?: string | null;
+          has_heavy_items?: boolean;
         };
         Update: Partial<Database["public"]["Tables"]["orders"]["Insert"]>;
+        Relationships: [];
+      };
+      order_discussions: {
+        Row: {
+          id: string;
+          order_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          order_id: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["order_discussions"]["Insert"]>;
+        Relationships: [];
+      };
+      order_discussion_messages: {
+        Row: {
+          id: string;
+          discussion_id: string;
+          sender_id: string;
+          sender_role: "customer" | "admin" | "driver";
+          body: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          discussion_id: string;
+          sender_id: string;
+          sender_role: "customer" | "admin" | "driver";
+          body: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["order_discussion_messages"]["Insert"]>;
         Relationships: [];
       };
       carts: {

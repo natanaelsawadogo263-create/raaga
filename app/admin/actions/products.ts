@@ -79,6 +79,14 @@ async function cityFromShop(supabase: SupabaseClient<Database>, shopId: string):
   return (data?.city ?? "").trim();
 }
 
+async function categoryNameFromId(
+  supabase: SupabaseClient<Database>,
+  categoryId: string,
+): Promise<string> {
+  const { data } = await supabase.from("categories").select("name").eq("id", categoryId).maybeSingle();
+  return (data?.name ?? "").trim();
+}
+
 async function productImageCount(supabase: SupabaseClient<Database>, productId: string): Promise<number> {
   const { count, error } = await supabase
     .from("product_images")
@@ -114,6 +122,7 @@ export async function createProductAction(formData: FormData) {
   const low_stock_threshold = parseIntSafe(String(formData.get("low_stock_threshold") ?? "5"), 5);
   const status = parseStatus(String(formData.get("status") ?? "normal"));
   const is_active = formData.get("is_active") === "on";
+  const is_heavy = formData.get("is_heavy") === "on";
   const image_urls_raw = String(formData.get("image_urls") ?? "").trim();
   const variant_options = parseVariantOptions(String(formData.get("variant_options") ?? ""));
 
@@ -126,6 +135,7 @@ export async function createProductAction(formData: FormData) {
   }
 
   const city = await cityFromShop(supabase, shop_id);
+  const category = await categoryNameFromId(supabase, category_id);
 
   const { data: inserted, error } = await supabase
     .from("products")
@@ -134,7 +144,7 @@ export async function createProductAction(formData: FormData) {
       category_id,
       name,
       description,
-      category: "",
+      category,
       city,
       price_cfa,
       compare_at_price_cfa,
@@ -143,6 +153,7 @@ export async function createProductAction(formData: FormData) {
       low_stock_threshold,
       status,
       is_active,
+      is_heavy,
     })
     .select("id")
     .single();
@@ -223,6 +234,7 @@ export async function updateProductAction(formData: FormData) {
   const low_stock_threshold = parseIntSafe(String(formData.get("low_stock_threshold") ?? "5"), 5);
   const status = parseStatus(String(formData.get("status") ?? "normal"));
   const is_active = formData.get("is_active") === "on";
+  const is_heavy = formData.get("is_heavy") === "on";
   const variant_options = parseVariantOptions(String(formData.get("variant_options") ?? ""));
 
   if (!UUID_RE.test(shop_id) || !UUID_RE.test(category_id) || !name || !description) {
@@ -234,6 +246,7 @@ export async function updateProductAction(formData: FormData) {
   }
 
   const city = await cityFromShop(supabase, shop_id);
+  const category = await categoryNameFromId(supabase, category_id);
 
   const { error } = await supabase
     .from("products")
@@ -242,6 +255,7 @@ export async function updateProductAction(formData: FormData) {
       category_id,
       name,
       description,
+      category,
       city,
       price_cfa,
       compare_at_price_cfa,
@@ -250,6 +264,7 @@ export async function updateProductAction(formData: FormData) {
       low_stock_threshold,
       status,
       is_active,
+      is_heavy,
     })
     .eq("id", id);
 

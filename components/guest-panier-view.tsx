@@ -15,6 +15,7 @@ import {
   btnDangerOutlineClass,
   btnPrimaryClass,
 } from "@/components/raaga/page-shell";
+import { CartDeliveryLine } from "@/components/cart-delivery-line";
 import { getGuestCartLines, setGuestCartLines, type GuestCartLine } from "@/lib/guest-cart";
 
 export function GuestPanierView() {
@@ -90,6 +91,7 @@ export function GuestPanierView() {
   const items = preview?.items ?? [];
   const subtotal = preview?.subtotal ?? 0;
   const deliveryFee = preview?.deliveryFee ?? 0;
+  const deliveryLabel = preview?.deliveryLabel ?? null;
   const total = preview?.total ?? 0;
 
   return (
@@ -174,10 +176,7 @@ export function GuestPanierView() {
                     <span className="text-muted-foreground">Sous-total</span>
                     <span className="font-semibold tabular-nums">{subtotal.toLocaleString("fr-FR")} FCFA</span>
                   </p>
-                  <p className="flex justify-between gap-4">
-                    <span className="text-muted-foreground">Livraison</span>
-                    <span className="font-semibold tabular-nums">{deliveryFee.toLocaleString("fr-FR")} FCFA</span>
-                  </p>
+                  <CartDeliveryLine deliveryFee={deliveryFee} deliveryLabel={deliveryLabel} />
                   <div className="border-t border-border pt-3">
                     <p className="flex justify-between gap-4 text-base font-black">
                       <span>Total</span>

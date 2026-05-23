@@ -13,8 +13,10 @@ import {
   User,
   Wallet,
 } from "lucide-react";
+import { DriverTaskPackageImages } from "@/components/livreur/driver-task-package-images";
 import { OrderStatusBadge } from "@/components/order-status-badge";
 import { requireRole } from "@/lib/auth-guards";
+import { fetchDriverTaskItemsByOrderIds } from "@/lib/driver-task-items";
 import { paymentMethodLabel } from "@/lib/admin/order-labels";
 import { formatCFA } from "@/lib/admin/format";
 
@@ -153,6 +155,14 @@ export default async function LivreurDashboardPage({ searchParams }: PageProps) 
   const tachesDisponiblesCount = availableCountRes.count ?? 0;
   const activeOrder = (activeRes.data ?? null) as ActiveOrder | null;
   const availableTasks = (availableListRes.data ?? []) as AvailableTask[];
+
+  function pickOne<T>(raw: T | T[] | null): T | null {
+    if (!raw) return null;
+    return Array.isArray(raw) ? (raw[0] ?? null) : raw;
+  }
+
+  const previewOrderIds = availableTasks.map((t) => t.id);
+  const { packageLinesByOrder } = await fetchDriverTaskItemsByOrderIds(supabase, previewOrderIds);
 
   let activeCustomer: { first_name: string; last_name: string; phone: string } | null = null;
   let activeShopName: string | null = null;
@@ -481,21 +491,26 @@ export default async function LivreurDashboardPage({ searchParams }: PageProps) 
                   key={t.id}
                   className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
                 >
-                  <div className="flex items-start gap-3 min-w-0">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-orange-100 text-[#FF7A00]">
-                      <Package className="h-5 w-5" aria-hidden />
-                    </span>
-                    <div className="min-w-0">
-                      <p
-                        className="font-mono text-sm font-black tabular-nums text-slate-900"
-                        translate="no"
-                      >
-                        Cmd #{t.reference}
-                      </p>
-                      <p className="mt-0.5 truncate text-[11px] text-slate-500">
-                        {t.city} · {t.district} · {t.sector}
-                      </p>
-                    </div>
+                  <div className="min-w-0 flex-1">
+                    <p
+                      className="font-mono text-sm font-black tabular-nums text-slate-900"
+                      translate="no"
+                    >
+                      Cmd #{t.reference}
+                    </p>
+                    <p className="mt-0.5 truncate text-[11px] text-slate-500">
+                      {t.city} · {t.district} · {t.sector}
+                    </p>
+                    {packageLinesByOrder.get(t.id)?.length ? (
+                      <DriverTaskPackageImages
+                        lines={packageLinesByOrder.get(t.id)!}
+                        variant="compact"
+                      />
+                    ) : (
+                      <span className="mt-2 flex h-10 w-10 items-center justify-center rounded-xl bg-orange-100 text-[#FF7A00]">
+                        <Package className="h-5 w-5" aria-hidden />
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center gap-3 sm:gap-4">
                     <div className="text-right">

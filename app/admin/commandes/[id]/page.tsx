@@ -4,6 +4,7 @@ import { AdminOrderManage } from "@/components/admin/admin-order-manage";
 import { requireRole } from "@/lib/auth-guards";
 import { fetchAdminOrderDetail, fetchAdminProductsForPicker } from "@/lib/admin/data";
 import { parseAdminFlash } from "@/lib/admin/flash";
+import { fetchOrderDiscussionByOrderId } from "@/lib/order-discussion";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -24,7 +25,7 @@ export default async function AdminCommandeDetailPage({ params, searchParams }: 
   }
 
   const sp = await searchParams;
-  const { supabase } = await requireRole(["admin", "super_admin"]);
+  const { supabase, user } = await requireRole(["admin", "super_admin"]);
 
   const [{ detail, error: dErr }, { products, error: pErr }] = await Promise.all([
     fetchAdminOrderDetail(supabase, id),
@@ -43,6 +44,8 @@ export default async function AdminCommandeDetailPage({ params, searchParams }: 
   const flash = parseAdminFlash(sp);
   const loadError = pErr;
 
+  const discussion = await fetchOrderDiscussionByOrderId(supabase, id);
+
   return (
     <div className="space-y-4">
       {loadError ? (
@@ -51,7 +54,13 @@ export default async function AdminCommandeDetailPage({ params, searchParams }: 
         </div>
       ) : null}
 
-      <AdminOrderManage detail={detail} products={products} flash={flash} />
+      <AdminOrderManage
+        detail={detail}
+        products={products}
+        flash={flash}
+        discussion={discussion}
+        adminUserId={user.id}
+      />
     </div>
   );
 }

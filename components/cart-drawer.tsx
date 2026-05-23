@@ -390,12 +390,20 @@ function CartDrawerPanel() {
                   <div className="flex justify-between gap-4">
                     <dt className="flex items-center gap-1.5 text-muted-foreground">
                       Livraison
-                      <span className="rounded bg-muted px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                        estimée
-                      </span>
+                      {!data.deliveryLabel ? (
+                        <span className="rounded bg-muted px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                          estimée
+                        </span>
+                      ) : null}
                     </dt>
-                    <dd className="font-semibold tabular-nums text-foreground">
-                      {data.deliveryFee.toLocaleString("fr-FR")} FCFA
+                    <dd
+                      className={
+                        data.deliveryLabel
+                          ? "max-w-[58%] text-right text-[11px] font-semibold leading-snug text-amber-900"
+                          : "font-semibold tabular-nums text-foreground"
+                      }
+                    >
+                      {data.deliveryLabel ?? `${data.deliveryFee.toLocaleString("fr-FR")} FCFA`}
                     </dd>
                   </div>
                   <div className="border-t border-border/80 pt-3">

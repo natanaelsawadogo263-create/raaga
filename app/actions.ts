@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { cartHasHeavyProduct, computeCartDelivery } from "@/lib/heavy-product";
 import { computeOrderTotal, digitsOnlyDeliveryCode, generateDeliverySecretCode } from "@/lib/order-utils";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getSupabaseServerClient, tryGetSupabaseServerClient } from "@/lib/supabase/server";
@@ -499,7 +500,7 @@ export async function createOrderFromCartAction(formData: FormData) {
   const productIds = cartItems.map((row) => row.product_id);
   const { data: productsData, error: productsError } = await supabase
     .from("products")
-    .select("id, price_cfa, shop_id")
+    .select("id, price_cfa, shop_id, is_heavy")
     .in("id", productIds);
 
   if (productsError) {
@@ -514,7 +515,10 @@ export async function createOrderFromCartAction(formData: FormData) {
     }
     return sum + row.quantity * product.price_cfa;
   }, 0);
-  const total = computeOrderTotal(subtotal, 1000, 0);
+
+  const hasHeavyItems = cartHasHeavyProduct(productsData ?? []);
+  const delivery = computeCartDelivery(hasHeavyItems, cartItems.length);
+  const total = computeOrderTotal(subtotal, delivery.deliveryFeeCfa, 0);
 
   const { data: orderData, error: orderError } = await supabase
     .from("orders")
@@ -523,14 +527,15 @@ export async function createOrderFromCartAction(formData: FormData) {
       payment_method: paymentMethod,
       subtotal_cfa: subtotal,
       total_cfa: total,
-      delivery_fee_cfa: 1000,
+      delivery_fee_cfa: delivery.deliveryFeeCfa,
       discount_cfa: 0,
+      has_heavy_items: hasHeavyItems,
       delivery_secret_code: generateDeliverySecretCode(),
       city,
       district,
       sector,
       delivery_address: deliveryAddress,
-      order_status: "awaiting_driver",
+      order_status: hasHeavyItems ? "validated" : "awaiting_driver",
     })
     .select("id")
     .single();

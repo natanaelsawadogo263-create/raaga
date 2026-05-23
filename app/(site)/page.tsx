@@ -3,7 +3,9 @@ import Link from "next/link";
 import { ChevronRight, MapPinned, ShieldCheck, Sparkles, Wallet } from "lucide-react";
 import { HomeHeroBanner } from "@/components/home-hero-banner";
 import { HomeSectionHeader } from "@/components/home-section-header";
+import { CatalogProductCard } from "@/components/catalog-product-card";
 import { fetchHomeCategoryCards } from "@/lib/catalog-categories";
+import { fetchHomeSpotlightProducts } from "@/lib/catalog-products";
 import { appHighlights } from "@/lib/raaga-data";
 
 const highlightMeta = [
@@ -13,7 +15,10 @@ const highlightMeta = [
 ];
 
 export default async function Home() {
-  const categoryCards = await fetchHomeCategoryCards();
+  const [categoryCards, spotlightProducts] = await Promise.all([
+    fetchHomeCategoryCards(),
+    fetchHomeSpotlightProducts(8),
+  ]);
 
   return (
     <div className="relative pb-16">
@@ -73,6 +78,30 @@ export default async function Home() {
                   </span>
                 </div>
               </Link>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {spotlightProducts.length > 0 ? (
+        <section className="container-raaga mt-14">
+          <HomeSectionHeader
+            eyebrow="Boutique"
+            title="Derniers produits"
+            description="Les articles actifs que vous avez ajoutés dans l’administration."
+            extra={
+              <Link
+                href="/produits"
+                className="inline-flex items-center gap-1 text-sm font-bold text-brand hover:underline"
+              >
+                Voir tout
+                <ChevronRight className="h-4 w-4" aria-hidden />
+              </Link>
+            }
+          />
+          <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
+            {spotlightProducts.map((product) => (
+              <CatalogProductCard key={product.id} product={product} />
             ))}
           </div>
         </section>

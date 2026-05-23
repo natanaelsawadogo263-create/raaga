@@ -1,5 +1,7 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ProductBadgeStatus } from "@/components/status-badge";
 import { categoryShowcases, featuredProducts } from "@/lib/raaga-data";
+import type { Database } from "@/lib/supabase/database.types";
 import { tryGetSupabaseServerClient } from "@/lib/supabase/server";
 
 export type CatalogProduct = {
@@ -13,6 +15,8 @@ export type CatalogProduct = {
   compareAtPriceCfa: number | null;
   stockQuantity: number;
   status: ProductBadgeStatus;
+  /** Produit poids lourd (livraison spéciale, discussion post-commande). */
+  isHeavy: boolean;
   /** URL absolue (ex. Unsplash) ou chemin public pour next/image */
   imageUrl: string | null;
 };
@@ -38,6 +42,7 @@ type ProductRowDb = {
   compare_at_price_cfa: number | null;
   stock_quantity: number;
   status: string;
+  is_heavy?: boolean | null;
   description: string | null;
   variant_options: unknown;
   product_images: ProductImageRow[] | null;
@@ -107,12 +112,64 @@ function fromFeatured(): CatalogProduct[] {
       typeof p.compareAtPrice === "number" && p.compareAtPrice > p.price ? p.compareAtPrice : null,
     stockQuantity: p.status === "rupture" ? 0 : 12,
     status: mapStatus(p.status),
+    isHeavy: false,
     imageUrl: p.image.startsWith("http") ? p.image : categoryFallbackImage(p.category),
   }));
 }
 
 const PRODUCT_LIST_SELECT =
+  "id, name, category, city, price_cfa, compare_at_price_cfa, stock_quantity, status, is_heavy, description, variant_options, product_images ( image_url, is_primary, sort_order ), categories ( image_url )";
+
+const PRODUCT_LIST_SELECT_LEGACY =
   "id, name, category, city, price_cfa, compare_at_price_cfa, stock_quantity, status, description, variant_options, product_images ( image_url, is_primary, sort_order ), categories ( image_url )";
+
+function isMissingHeavyColumnError(message: string | undefined): boolean {
+  if (!message) return false;
+  const m = message.toLowerCase();
+  return m.includes("is_heavy") || (m.includes("column") && m.includes("does not exist"));
+}
+
+async function fetchActiveProductRows(
+  supabase: SupabaseClient<Database>,
+  limit?: number,
+): Promise<{ rows: ProductRowDb[] | null; error: string | null }> {
+  let query = supabase
+    .from("products")
+    .select(PRODUCT_LIST_SELECT)
+    .eq("is_active", true)
+    .order("created_at", { ascending: false });
+
+  if (limit != null) {
+    query = query.limit(limit);
+  } else {
+    query = query.limit(1000);
+  }
+
+  let { data, error } = await query;
+
+  if (error && isMissingHeavyColumnError(error.message)) {
+    let legacyQuery = supabase
+      .from("products")
+      .select(PRODUCT_LIST_SELECT_LEGACY)
+      .eq("is_active", true)
+      .order("created_at", { ascending: false });
+    if (limit != null) {
+      legacyQuery = legacyQuery.limit(limit);
+    } else {
+      legacyQuery = legacyQuery.limit(1000);
+    }
+    const retry = await legacyQuery;
+    data = retry.data as typeof data;
+    error = retry.error;
+  }
+
+  if (error) {
+    console.error("[catalog] lecture produits Supabase:", error.message);
+    return { rows: null, error: error.message };
+  }
+
+  return { rows: (data ?? []) as unknown as ProductRowDb[], error: null };
+}
 
 function mapRowsToCatalog(rows: ProductRowDb[]): CatalogProduct[] {
   return rows.map((item) => {
@@ -133,6 +190,7 @@ function mapRowsToCatalog(rows: ProductRowDb[]): CatalogProduct[] {
           : null,
       stockQuantity: item.stock_quantity,
       status: mapStatus(item.status),
+      isHeavy: item.is_heavy === true,
       imageUrl: primary || catCover || fallback,
     };
   });
@@ -194,14 +252,28 @@ export async function fetchProductById(id: string): Promise<CatalogProductDetail
     return { ...row, images: imgs, variantOptions: [] };
   }
 
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from("products")
     .select(PRODUCT_LIST_SELECT)
     .eq("id", id)
     .eq("is_active", true)
     .maybeSingle();
 
+  if (error && isMissingHeavyColumnError(error.message)) {
+    const retry = await supabase
+      .from("products")
+      .select(PRODUCT_LIST_SELECT_LEGACY)
+      .eq("id", id)
+      .eq("is_active", true)
+      .maybeSingle();
+    data = retry.data as typeof data;
+    error = retry.error;
+  }
+
   if (error || !data) {
+    if (error) {
+      console.error("[catalog] fiche produit:", error.message);
+    }
     return null;
   }
 
@@ -234,6 +306,7 @@ export async function fetchProductById(id: string): Promise<CatalogProductDetail
         : null,
     stockQuantity: row.stock_quantity,
     status: mapStatus(row.status),
+    isHeavy: row.is_heavy === true,
     imageUrl: images[0] ?? null,
     images,
     variantOptions: parseVariantOptions(row.variant_options),

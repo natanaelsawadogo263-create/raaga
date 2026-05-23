@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Eye, Heart, Package } from "lucide-react";
 import { addToFavoritesAction } from "@/app/actions";
 import { AddToCartButton } from "@/components/add-to-cart-button";
+import { HeavyProductBadge } from "@/components/heavy-product-badge";
 import type { CatalogProduct } from "@/lib/catalog-products";
 import { ProductPromoPrices } from "@/components/product-promo-prices";
 
@@ -39,6 +40,7 @@ export function CatalogProductCard({ product }: { product: CatalogProduct }) {
         <span className="absolute left-3 top-3 z-10 max-w-[calc(100%-1.5rem)] truncate rounded-lg bg-white/95 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-orange-950 shadow-md ring-1 ring-black/[0.06] backdrop-blur-sm">
           {product.category}
         </span>
+        {product.isHeavy ? <HeavyProductBadge /> : null}
       </Link>
 
       <div className="relative z-10 flex flex-1 flex-col p-3">

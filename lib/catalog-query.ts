@@ -60,7 +60,8 @@ export function filterAndSortCatalog(
     });
   }
   if (state.cat) {
-    list = list.filter((p) => p.category === state.cat);
+    const want = state.cat.trim().toLowerCase();
+    list = list.filter((p) => p.category.trim().toLowerCase() === want);
   }
   if (state.min != null) {
     list = list.filter((p) => p.price >= state.min!);

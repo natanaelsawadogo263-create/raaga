@@ -5,7 +5,9 @@ import { Heart, ListChecks, Truck } from "lucide-react";
 import { addToFavoritesAction } from "@/app/actions";
 import { CatalogBreadcrumbs } from "@/components/catalog/catalog-breadcrumbs";
 import { CatalogProductCard } from "@/components/catalog-product-card";
+import { HeavyProductBadge } from "@/components/heavy-product-badge";
 import { ProductGallery } from "@/components/product-gallery";
+import { HEAVY_DELIVERY_MESSAGE } from "@/lib/heavy-product";
 import { ProductPromoPrices } from "@/components/product-promo-prices";
 import { ProductQuantityAdd } from "@/components/product-quantity-add";
 import { PageShell } from "@/components/raaga/page-shell";
@@ -48,6 +50,7 @@ export default async function ProductDetailPage({ params }: Props) {
         <div className="mx-auto mt-4 grid max-w-4xl gap-6 lg:mt-6 lg:auto-rows-max lg:grid-cols-[minmax(0,270px)_minmax(0,1fr)] xl:grid-cols-[minmax(0,300px)_minmax(0,1fr)] lg:items-start lg:gap-6 xl:gap-8">
           <div className="mx-auto w-full max-w-[min(292px,100%)] justify-self-center sm:max-w-[300px] lg:mx-0 lg:max-w-none lg:justify-self-start">
             <ProductGallery compact images={product.images} productName={product.name} />
+            {product.isHeavy ? <HeavyProductBadge variant="inline" /> : null}
           </div>
 
           <div className="min-w-0">
@@ -69,6 +72,12 @@ export default async function ProductDetailPage({ params }: Props) {
             </h1>
 
             <ProductPromoPrices product={product} variant="detail" />
+
+            {product.isHeavy ? (
+              <p className="mt-3 rounded-xl border border-amber-200/80 bg-amber-50/60 px-3 py-2.5 text-xs font-semibold leading-relaxed text-amber-950 sm:text-sm">
+                {HEAVY_DELIVERY_MESSAGE}
+              </p>
+            ) : null}
 
             {disabled || product.stockQuantity <= 5 ? (
               <p

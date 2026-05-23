@@ -257,7 +257,7 @@ export function AdminProductForm({
             </select>
           </div>
 
-          <div className="flex items-end gap-2 pb-1">
+          <div className="flex flex-col gap-3 pb-1 sm:col-span-2">
             <label className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-slate-800">
               <input
                 type="checkbox"
@@ -266,6 +266,20 @@ export function AdminProductForm({
                 className="h-4 w-4 rounded border-slate-300 text-[#FF7A00] focus:ring-[#FF7A00]"
               />
               Produit actif (visible catalogue)
+            </label>
+            <label className="flex cursor-pointer items-start gap-2 text-sm font-semibold text-slate-800">
+              <input
+                type="checkbox"
+                name="is_heavy"
+                defaultChecked={product?.is_heavy === true}
+                className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-[#FF7A00] focus:ring-[#FF7A00]"
+              />
+              <span>
+                Produit poids lourd
+                <span className="mt-0.5 block text-[11px] font-normal text-slate-500">
+                  Livraison spéciale ou retrait — discussion avec le client après commande. Ce n’est pas une catégorie.
+                </span>
+              </span>
             </label>
           </div>
         </div>
