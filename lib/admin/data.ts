@@ -372,7 +372,9 @@ export async function fetchAdminOrderDetail(
   ]);
 
   const baseItems = itemsRaw ?? [];
-  const productIds = [...new Set(baseItems.map((i) => i.product_id))];
+  const productIds = [
+    ...new Set(baseItems.map((i) => i.product_id).filter((pid): pid is string => Boolean(pid))),
+  ];
   const shopIds = [...new Set(baseItems.map((i) => i.shop_id))];
   const productNames = new Map<string, string>();
   const shopNames = new Map<string, string>();
@@ -397,7 +399,10 @@ export async function fetchAdminOrderDetail(
       driver: driver ?? null,
       items: baseItems.map((it) => ({
         ...it,
-        product_name: productNames.get(it.product_id) ?? null,
+        product_name:
+          it.product_name ??
+          (it.product_id ? productNames.get(it.product_id) : null) ??
+          "Produit supprimé",
         shop_name: shopNames.get(it.shop_id) ?? null,
       })),
     },

@@ -37,7 +37,7 @@ export function AdminProductRowActions({ productId, productName }: AdminProductR
         onSubmit={(e) => {
           if (
             !confirm(
-              `Supprimer ou désactiver « ${productName} » ?\n\nSi le produit a déjà été commandé, il sera seulement désactivé et passé en rupture.`,
+              `Supprimer définitivement « ${productName} » ?\n\nCette action est irréversible. Les commandes passées garderont le nom du produit.`,
             )
           ) {
             e.preventDefault();
@@ -45,11 +45,13 @@ export function AdminProductRowActions({ productId, productName }: AdminProductR
         }}
       >
         <input type="hidden" name="id" value={productId} />
+        <input type="hidden" name="confirm_text" value="SUPPRIMER" />
+        <input type="hidden" name="from" value="list" />
         <button
           type="submit"
           className={adminCrudIconBtnDanger}
-          title="Supprimer ou désactiver"
-          aria-label="Supprimer ou désactiver le produit"
+          title="Supprimer définitivement"
+          aria-label="Supprimer définitivement le produit"
         >
           <Trash2 className="h-4 w-4" strokeWidth={2} aria-hidden />
         </button>

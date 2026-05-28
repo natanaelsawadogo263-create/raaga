@@ -14,7 +14,8 @@ export function parseAdminFlash(searchParams: Record<string, string | string[] |
     article: "Article ou commande invalide.",
     ligne: "Ligne de commande introuvable.",
     produit: "Produit introuvable.",
-    confirm: "La confirmation a été annulée. La commande n'a pas été supprimée.",
+    confirm:
+      "Confirmation refusée ou manquante. Rien n'a été supprimé (saisissez SUPPRIMER si demandé).",
     order_already_gone:
       "Cette commande n'existe plus (déjà supprimée par un autre admin, ou identifiant invalide).",
     refus: "Action refusée (ex. catégorie système « Autres »).",
@@ -46,8 +47,7 @@ export function parseAdminFlash(searchParams: Record<string, string | string[] |
   const OK_MAP: Record<string, string> = {
     created: "Produit créé.",
     updated: "Produit enregistré.",
-    desactive: "Produit désactivé (il a déjà été commandé).",
-    supprime: "Produit supprimé.",
+    supprime: "Produit supprimé définitivement.",
     image: "Image ajoutée.",
     image_del: "Image retirée.",
     image_primary: "Image principale mise à jour.",

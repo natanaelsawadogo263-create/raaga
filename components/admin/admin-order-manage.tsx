@@ -252,7 +252,7 @@ export function AdminOrderManage({
                     <AdminOrderItemRemoveForm
                       itemId={it.id}
                       orderId={order.id}
-                      productLabel={it.product_name ?? it.product_id}
+                      productLabel={it.product_name ?? it.product_id ?? "Article"}
                     />
                   </td>
                 </tr>

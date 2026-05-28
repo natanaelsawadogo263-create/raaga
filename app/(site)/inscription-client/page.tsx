@@ -1,4 +1,4 @@
-import { ArrowRight, UserPlus } from "lucide-react";
+import { AlertTriangle, ArrowRight, UserPlus } from "lucide-react";
 import { signUpCustomerAction } from "@/app/actions";
 import { AuthCard, AuthPageShell, AuthSignInLink } from "@/components/raaga/auth-layout";
 import {
@@ -8,7 +8,20 @@ import {
   btnPrimaryClass,
 } from "@/components/raaga/page-shell";
 
-export default function InscriptionClientPage() {
+type PageProps = {
+  searchParams?: Promise<{ error?: string }>;
+};
+
+const ERRORS: Record<string, string> = {
+  champs: "Tous les champs sont obligatoires.",
+  motdepasse: "Le mot de passe doit dépasser 6 caractères.",
+  signup: "Inscription impossible. Vérifiez vos informations et réessayez.",
+};
+
+export default async function InscriptionClientPage({ searchParams }: PageProps) {
+  const sp = (await searchParams) ?? {};
+  const errorMsg = sp.error ? (ERRORS[sp.error] ?? "Une erreur est survenue.") : null;
+
   return (
     <AuthPageShell>
       <div className="container-raaga py-8 sm:py-12 md:py-14">
@@ -29,6 +42,16 @@ export default function InscriptionClientPage() {
               <p className="mt-5 text-base font-bold text-foreground">Rejoignez Raaga en quelques minutes</p>
               <p className="mt-1.5 text-sm text-muted-foreground">Formulaire court, pensé pour le mobile et la saisie au clavier.</p>
             </div>
+
+            {errorMsg ? (
+              <div
+                className="mb-5 flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-900"
+                role="alert"
+              >
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+                <p>{errorMsg}</p>
+              </div>
+            ) : null}
 
             <p className="mb-5 text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Vos coordonnées</p>
 
@@ -62,7 +85,7 @@ export default function InscriptionClientPage() {
               <Field
                 label="Mot de passe"
                 htmlFor="password"
-                hint="Minimum recommandé : 8 caractères."
+                hint="Plus de 6 caractères (minimum 7)."
                 className="sm:col-span-2"
               >
                 <input
@@ -70,6 +93,7 @@ export default function InscriptionClientPage() {
                   name="password"
                   type="password"
                   required
+                  minLength={7}
                   autoComplete="new-password"
                   placeholder="••••••••"
                   className={authInputClass}

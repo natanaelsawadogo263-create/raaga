@@ -43,6 +43,11 @@ function revalidateOrderPaths(orderId: string) {
   revalidatePath(`/admin/commandes/${orderId}`);
 }
 
+/** Mot de passe inscription : doit dépasser 6 caractères (minimum 7). */
+function isSignupPasswordTooShort(password: string): boolean {
+  return password.length <= 6;
+}
+
 export async function signUpCustomerAction(formData: FormData) {
   const email = String(formData.get("email") ?? "");
   const password = String(formData.get("password") ?? "");
@@ -53,7 +58,11 @@ export async function signUpCustomerAction(formData: FormData) {
   const district = String(formData.get("district") ?? "");
 
   if (!email || !password || !firstName || !lastName || !phone || !city || !district) {
-    throw new Error("Tous les champs sont obligatoires.");
+    redirect("/inscription-client?error=champs");
+  }
+
+  if (isSignupPasswordTooShort(password)) {
+    redirect("/inscription-client?error=motdepasse");
   }
 
   /**
@@ -78,7 +87,11 @@ export async function signUpCustomerAction(formData: FormData) {
   });
 
   if (error) {
-    throw new Error(error.message);
+    const msg = error.message.toLowerCase();
+    if (msg.includes("password") && (msg.includes("short") || msg.includes("least") || msg.includes("6"))) {
+      redirect("/inscription-client?error=motdepasse");
+    }
+    redirect(`/inscription-client?error=${encodeURIComponent("signup")}`);
   }
 
   redirect("/connexion?inscription=ok");
@@ -129,6 +142,10 @@ export async function signUpDriverAction(formData: FormData) {
 
   if (!email || !password || !firstName || !lastName || !phone || !city || !district) {
     redirect("/inscription-livreur?error=champs");
+  }
+
+  if (isSignupPasswordTooShort(password)) {
+    redirect("/inscription-livreur?error=motdepasse");
   }
 
   /** Validation des 3 photos obligatoires (avatar + CNIB recto/verso). */
@@ -500,7 +517,7 @@ export async function createOrderFromCartAction(formData: FormData) {
   const productIds = cartItems.map((row) => row.product_id);
   const { data: productsData, error: productsError } = await supabase
     .from("products")
-    .select("id, price_cfa, shop_id, is_heavy")
+    .select("id, name, price_cfa, shop_id, is_heavy")
     .in("id", productIds);
 
   if (productsError) {
@@ -554,6 +571,7 @@ export async function createOrderFromCartAction(formData: FormData) {
       return {
         order_id: orderData.id,
         product_id: row.product_id,
+        product_name: product.name,
         shop_id: product.shop_id,
         quantity: row.quantity,
         unit_price_cfa: product.price_cfa,

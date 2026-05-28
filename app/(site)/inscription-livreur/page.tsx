@@ -23,6 +23,7 @@ type PageProps = {
 
 const ERRORS: Record<string, string> = {
   champs: "Tous les champs et toutes les photos sont obligatoires.",
+  motdepasse: "Le mot de passe doit dépasser 6 caractères.",
   files: "Photo de profil et carte nationale (recto + verso) sont obligatoires.",
   invalid_image: "Une des photos n'est pas une image valide.",
   too_large: "Une des photos dépasse la limite de 5 Mo.",
@@ -204,8 +205,8 @@ export default async function InscriptionLivreurPage({ searchParams }: PageProps
                       type="password"
                       required
                       autoComplete="new-password"
-                      placeholder="Au moins 6 caractères"
-                      minLength={6}
+                      placeholder="Plus de 6 caractères"
+                      minLength={7}
                       className={`${authInputClass} pl-10`}
                     />
                   </div>

@@ -81,7 +81,7 @@ export async function addOrderItemAdminAction(formData: FormData) {
 
   const { data: product, error: pErr } = await supabase
     .from("products")
-    .select("id, price_cfa, shop_id")
+    .select("id, name, price_cfa, shop_id")
     .eq("id", product_id)
     .maybeSingle();
 
@@ -95,6 +95,7 @@ export async function addOrderItemAdminAction(formData: FormData) {
   const { error } = await supabase.from("order_items").insert({
     order_id,
     product_id,
+    product_name: product.name,
     shop_id: product.shop_id,
     quantity,
     unit_price_cfa,

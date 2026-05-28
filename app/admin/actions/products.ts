@@ -4,9 +4,10 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { MAX_PRODUCT_IMAGES } from "@/lib/admin/product-images";
-import { uploadImageToMediaFolder } from "@/lib/admin/media-upload";
+import { uploadImageToMediaFolder, removeMediaObjectIfInBucket } from "@/lib/admin/media-upload";
 import { requireRole } from "@/lib/auth-guards";
 import type { Database } from "@/lib/supabase/database.types";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -281,43 +282,70 @@ export async function updateProductAction(formData: FormData) {
 }
 
 export async function deleteProductAction(formData: FormData) {
-  const { supabase } = await requireRole(["admin", "super_admin"]);
+  const { supabase: sessionClient } = await requireRole(["admin", "super_admin"]);
   const id = String(formData.get("id") ?? "").trim();
+  const fromList = String(formData.get("from") ?? "").trim() === "list";
+
+  function redirectProductError(message: string) {
+    if (fromList) {
+      redirect(`/admin/produits?error=${encodeURIComponent(message)}`);
+    }
+    redirect(`/admin/produits/${id}?error=${encodeURIComponent(message)}`);
+  }
+
   if (!UUID_RE.test(id)) {
     redirect("/admin/produits?error=id");
   }
 
-  const { count, error: cErr } = await supabase
-    .from("order_items")
-    .select("id", { count: "exact", head: true })
+  const confirm = String(formData.get("confirm_text") ?? "").trim();
+  if (confirm !== "SUPPRIMER") {
+    redirect(fromList ? "/admin/produits?error=confirm" : `/admin/produits/${id}?error=confirm`);
+  }
+
+  let db: SupabaseClient<Database>;
+  try {
+    db = getSupabaseAdminClient();
+  } catch {
+    db = sessionClient;
+  }
+
+  const { data: images, error: imgListErr } = await db
+    .from("product_images")
+    .select("image_url")
     .eq("product_id", id);
 
-  if (cErr) {
-    redirect(`/admin/produits/${id}?error=${encodeURIComponent(cErr.message)}`);
+  if (imgListErr) {
+    redirectProductError(imgListErr.message);
   }
 
-  if (count && count > 0) {
-    const { error } = await supabase.from("products").update({ is_active: false, status: "rupture" }).eq("id", id);
-    if (error) {
-      redirect(`/admin/produits/${id}?error=${encodeURIComponent(error.message)}`);
-    }
-    revalidatePath("/admin/produits");
-    revalidatePath("/produits");
-    redirect(`/admin/produits/${id}?ok=desactive`);
+  for (const row of images ?? []) {
+    await removeMediaObjectIfInBucket(db, row.image_url);
   }
 
-  const { error: delImg } = await supabase.from("product_images").delete().eq("product_id", id);
+  const { error: delImg } = await db.from("product_images").delete().eq("product_id", id);
   if (delImg) {
-    redirect(`/admin/produits/${id}?error=${encodeURIComponent(delImg.message)}`);
+    redirectProductError(delImg.message);
   }
 
-  const { error } = await supabase.from("products").delete().eq("id", id);
+  const { data: deleted, error } = await db.from("products").delete().eq("id", id).select("id");
   if (error) {
-    redirect(`/admin/produits/${id}?error=${encodeURIComponent(error.message)}`);
+    redirectProductError(error.message);
+  }
+
+  if (!deleted?.length) {
+    const { data: still } = await db.from("products").select("id").eq("id", id).maybeSingle();
+    if (still) {
+      redirectProductError(
+        "Le produit n'a pas pu être supprimé (vérifiez les droits ou appliquez la migration order_items).",
+      );
+    }
   }
 
   revalidatePath("/admin/produits");
+  revalidatePath(`/admin/produits/${id}`);
   revalidatePath("/produits");
+  revalidatePath(`/produits/${id}`);
+  revalidatePath("/promo");
   redirect("/admin/produits?ok=supprime");
 }
 

@@ -4,9 +4,9 @@ import {
   addProductImageAction,
   addProductImageFilesAction,
   createProductAction,
-  deleteProductAction,
   updateProductAction,
 } from "@/app/admin/actions/products";
+import { AdminProductDeleteForm } from "@/components/admin/admin-product-delete-form";
 import { AdminProductImageRowActions } from "@/components/admin/admin-product-image-row-actions";
 import type { AdminCategoryOption, AdminShopOption } from "@/lib/admin/data";
 import { MAX_PRODUCT_IMAGES } from "@/lib/admin/product-images";
@@ -437,17 +437,7 @@ export function AdminProductForm({
       ) : null}
 
       {isEdit && product ? (
-        <div className="rounded-2xl border border-rose-200/80 bg-rose-50/50 p-5 shadow-sm">
-          <form action={deleteProductAction} className="mt-0">
-            <input type="hidden" name="id" value={product.id} />
-            <button
-              type="submit"
-              className="rounded-xl border border-rose-300 bg-white px-4 py-2 text-sm font-bold text-rose-700 hover:bg-rose-50"
-            >
-              Supprimer / désactiver
-            </button>
-          </form>
-        </div>
+        <AdminProductDeleteForm productId={product.id} productName={product.name} />
       ) : null}
     </div>
   );

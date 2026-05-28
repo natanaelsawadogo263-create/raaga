@@ -271,7 +271,8 @@ export type Database = {
         Row: {
           id: string;
           order_id: string;
-          product_id: string;
+          product_id: string | null;
+          product_name: string | null;
           shop_id: string;
           quantity: number;
           unit_price_cfa: number;
@@ -281,7 +282,8 @@ export type Database = {
         Insert: {
           id?: string;
           order_id: string;
-          product_id: string;
+          product_id?: string | null;
+          product_name?: string | null;
           shop_id: string;
           quantity: number;
           unit_price_cfa: number;
