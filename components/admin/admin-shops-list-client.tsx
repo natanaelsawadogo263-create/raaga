@@ -64,7 +64,6 @@ export function AdminShopsListClient({ shops }: { shops: AdminShopListRow[] }) {
           s.address,
           s.phone,
           s.description ?? "",
-          s.manager_name ?? "",
           STATUS_LABELS[s.status],
           s.owner_user_id ?? "",
         ),
@@ -196,11 +195,6 @@ export function AdminShopsListClient({ shops }: { shops: AdminShopListRow[] }) {
                       {s.phone}
                     </span>
                   )}
-                </td>
-                <td className="max-w-[160px] border-b border-slate-100 px-3 py-3.5 whitespace-nowrap">
-                  <span className="block truncate text-sm text-slate-800" title={s.manager_name?.trim() || undefined}>
-                    {s.manager_name?.trim() || "—"}
-                  </span>
                 </td>
                 <td className="border-b border-slate-100 px-3 py-3.5 whitespace-nowrap">
                   <span

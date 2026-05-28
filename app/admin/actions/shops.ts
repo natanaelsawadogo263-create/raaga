@@ -18,28 +18,20 @@ function parseShopStatus(v: string): ShopStatus {
 /** Champs ville/quartier/secteur non utilisés dans le formulaire simplifié ; la base exige NOT NULL. */
 const PLACEHOLDER_LOCATION = "";
 
-function buildManagerName(first: string, last: string) {
-  return `${first} ${last}`.trim();
-}
-
 export async function createShopAction(formData: FormData) {
   const { supabase } = await requireRole(["admin", "super_admin"]);
 
   const name = String(formData.get("name") ?? "").trim();
-  const owner_first_name = String(formData.get("owner_first_name") ?? "").trim();
-  const owner_last_name = String(formData.get("owner_last_name") ?? "").trim();
   const phone = String(formData.get("phone") ?? "").trim();
   const address = String(formData.get("address") ?? "").trim();
 
-  if (!name || !owner_first_name || !owner_last_name || !phone || !address) {
+  if (!name || !phone || !address) {
     redirect("/admin/boutiques/nouveau?error=champs");
   }
 
-  const manager_name = buildManagerName(owner_first_name, owner_last_name);
-
   const { error } = await supabase.from("shops").insert({
     name,
-    manager_name,
+    manager_name: null,
     phone,
     address,
     city: PLACEHOLDER_LOCATION,
@@ -69,23 +61,18 @@ export async function updateShopAction(formData: FormData) {
   }
 
   const name = String(formData.get("name") ?? "").trim();
-  const owner_first_name = String(formData.get("owner_first_name") ?? "").trim();
-  const owner_last_name = String(formData.get("owner_last_name") ?? "").trim();
   const phone = String(formData.get("phone") ?? "").trim();
   const address = String(formData.get("address") ?? "").trim();
   const status = parseShopStatus(String(formData.get("status") ?? "active"));
 
-  if (!name || !owner_first_name || !owner_last_name || !phone || !address) {
+  if (!name || !phone || !address) {
     redirect(`/admin/boutiques/${id}?error=champs`);
   }
-
-  const manager_name = buildManagerName(owner_first_name, owner_last_name);
 
   const { error } = await supabase
     .from("shops")
     .update({
       name,
-      manager_name,
       phone,
       address,
       status,

@@ -20,14 +20,6 @@ function labelClass() {
   return "block text-xs font-bold text-slate-700";
 }
 
-function splitManagerName(raw: string | null | undefined): { first: string; last: string } {
-  const m = (raw ?? "").trim();
-  if (!m) return { first: "", last: "" };
-  const i = m.indexOf(" ");
-  if (i === -1) return { first: m, last: "" };
-  return { first: m.slice(0, i).trim(), last: m.slice(i + 1).trim() };
-}
-
 export function AdminShopForm({
   mode,
   shop,
@@ -38,7 +30,6 @@ export function AdminShopForm({
   flash?: { error?: string };
 }) {
   const isEdit = mode === "edit" && shop;
-  const owner = isEdit ? splitManagerName(shop.manager_name) : { first: "", last: "" };
 
   return (
     <div className="space-y-6">
@@ -58,31 +49,6 @@ export function AdminShopForm({
               Nom de la boutique
             </label>
             <input id="name" name="name" required className={fieldClass()} defaultValue={shop?.name ?? ""} />
-          </div>
-
-          <div>
-            <label className={labelClass()} htmlFor="owner_first_name">
-              Prénom du propriétaire
-            </label>
-            <input
-              id="owner_first_name"
-              name="owner_first_name"
-              required
-              className={fieldClass()}
-              defaultValue={owner.first}
-            />
-          </div>
-          <div>
-            <label className={labelClass()} htmlFor="owner_last_name">
-              Nom du propriétaire
-            </label>
-            <input
-              id="owner_last_name"
-              name="owner_last_name"
-              required
-              className={fieldClass()}
-              defaultValue={owner.last}
-            />
           </div>
 
           <div className="sm:col-span-2">
