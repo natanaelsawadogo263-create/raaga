@@ -32,14 +32,7 @@ export function HomeHeroBanner() {
 
         <div className="relative p-6 sm:p-8 lg:p-10 motion-safe:animate-fade-up">
           <div className="text-white">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-black/20 px-3 py-1 text-[11px] font-bold uppercase tracking-wide backdrop-blur-sm sm:text-xs">
-                <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-orange-200" />
-                Promo du moment
-              </span>
-            </div>
-
-            <h1 id="hero-heading" className="mt-5 max-w-3xl text-balance text-3xl font-black leading-[1.08] tracking-tight sm:text-5xl lg:text-[3.25rem]">
+            <h1 id="hero-heading" className="max-w-3xl text-balance text-3xl font-black leading-[1.08] tracking-tight sm:text-5xl lg:text-[3.25rem]">
               Achetez local. <span className="text-orange-200">Livrez vite.</span> Payez à la réception.
             </h1>
 
