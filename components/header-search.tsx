@@ -22,6 +22,18 @@ function catalogStateForQuery(q: string): CatalogUrlState {
   };
 }
 
+function catalogStateForCategory(cat: string): CatalogUrlState {
+  return {
+    q: "",
+    page: 1,
+    cat,
+    min: null,
+    max: null,
+    sort: "recent",
+    stock: "all",
+  };
+}
+
 type SuggestionRow =
   | { kind: "product"; key: string; href: string; title: string; subtitle: string; imageUrl: string | null }
   | { kind: "category"; key: string; href: string; title: string; subtitle: string }
@@ -147,7 +159,7 @@ export function HeaderSearch() {
       out.push({
         kind: "category",
         key: `c-${c}`,
-        href: produitsHref(catalogStateForQuery(c)),
+        href: produitsHref(catalogStateForCategory(c)),
         title: c,
         subtitle: "Catégorie",
       });

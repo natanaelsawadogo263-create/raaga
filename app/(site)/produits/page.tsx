@@ -9,6 +9,7 @@ import { fetchCatalogProducts } from "@/lib/catalog-products";
 import { CatalogPagination } from "@/components/catalog/catalog-pagination";
 import { CatalogResultsSummary } from "@/components/catalog/catalog-results-summary";
 import { CatalogProductCard } from "@/components/catalog-product-card";
+import { StaggerGrid } from "@/components/ui/stagger-grid";
 import { PageShell, RaCard } from "@/components/raaga/page-shell";
 import Link from "next/link";
 
@@ -47,11 +48,15 @@ export default async function ProduitsPage({ searchParams }: ProduitsPageProps) 
           {products.length ? (
             <>
               <CatalogResultsSummary totalFiltered={filtered.length} page={page} />
-              <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
+              <StaggerGrid
+                as="ul"
+                className="grid list-none grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4"
+                staggerMs={40}
+              >
                 {products.map((product) => (
                   <CatalogProductCard key={product.id} product={product} />
                 ))}
-              </div>
+              </StaggerGrid>
               <CatalogPagination state={viewState} totalPages={totalPages} />
             </>
           ) : (

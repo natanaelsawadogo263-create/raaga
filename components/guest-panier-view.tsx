@@ -16,6 +16,7 @@ import {
   btnPrimaryClass,
 } from "@/components/raaga/page-shell";
 import { CartDeliveryLine } from "@/components/cart-delivery-line";
+import { PanierSkeleton } from "@/components/ui/product-grid-skeleton";
 import { getGuestCartLines, setGuestCartLines, type GuestCartLine } from "@/lib/guest-cart";
 
 export function GuestPanierView() {
@@ -103,9 +104,7 @@ export function GuestPanierView() {
           description="Sans compte, votre panier reste sur cet appareil. Connectez-vous pour passer commande."
         />
 
-        {loading ? (
-          <p className="text-sm text-muted-foreground">Chargement du panier…</p>
-        ) : null}
+        {loading ? <PanierSkeleton /> : null}
 
         {!loading && preview === null && lines.length > 0 ? (
           <p className="text-sm text-destructive">Impossible de charger les prix des articles. Réessayez dans un instant.</p>

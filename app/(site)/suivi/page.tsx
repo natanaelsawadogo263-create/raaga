@@ -18,7 +18,7 @@ import {
   btnPrimaryClass,
   textareaClass,
 } from "@/components/raaga/page-shell";
-import { OrderDiscussionPanel } from "@/components/order-discussion-panel";
+import { OrderDiscussionLivePanel } from "@/components/order-discussion-live";
 import { HEAVY_DELIVERY_MESSAGE } from "@/lib/heavy-product";
 import { fetchOrderDiscussionByOrderId } from "@/lib/order-discussion";
 import { requireRole } from "@/lib/auth-guards";
@@ -254,9 +254,9 @@ export default async function SuiviPage({ searchParams }: SuiviPageProps) {
               ) : null}
 
               {discussion ? (
-                <OrderDiscussionPanel
+                <OrderDiscussionLivePanel
                   discussionId={discussion.discussionId}
-                  messages={discussion.messages}
+                  initialMessages={discussion.messages}
                   viewerUserId={user.id}
                   returnTo={orderId ? `/suivi?orderId=${order.id}` : "/suivi"}
                   title={

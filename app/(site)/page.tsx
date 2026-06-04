@@ -4,6 +4,7 @@ import { ChevronRight, MapPinned, ShieldCheck, Sparkles, Wallet } from "lucide-r
 import { HomeHeroBanner } from "@/components/home-hero-banner";
 import { HomeSectionHeader } from "@/components/home-section-header";
 import { CatalogProductCard } from "@/components/catalog-product-card";
+import { StaggerGrid } from "@/components/ui/stagger-grid";
 import { fetchHomeCategoryCards } from "@/lib/catalog-categories";
 import { fetchHomeSpotlightProducts } from "@/lib/catalog-products";
 import { appHighlights } from "@/lib/raaga-data";
@@ -45,12 +46,16 @@ export default async function Home() {
               </Link>
             }
           />
-          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+          <StaggerGrid
+            as="ul"
+            className="mt-6 grid list-none grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6"
+            staggerMs={50}
+          >
             {categoryCards.map((cat) => (
               <Link
                 key={cat.name}
                 href={cat.href}
-                className="group relative flex flex-col overflow-hidden rounded-2xl border border-border/80 bg-card shadow-sm ring-1 ring-black/[0.03] transition hover:-translate-y-0.5 hover:border-brand/30 hover:shadow-lg hover:shadow-orange-500/10"
+                className="group relative flex flex-col overflow-hidden rounded-2xl border border-border/80 bg-card shadow-sm ring-1 ring-black/[0.03] transition duration-300 hover:-translate-y-1 hover:border-brand/30 hover:shadow-lg hover:shadow-orange-500/15"
               >
                 <div className="relative aspect-[5/4] w-full overflow-hidden bg-muted">
                   <Image
@@ -79,7 +84,7 @@ export default async function Home() {
                 </div>
               </Link>
             ))}
-          </div>
+          </StaggerGrid>
         </section>
       ) : null}
 
@@ -99,11 +104,14 @@ export default async function Home() {
               </Link>
             }
           />
-          <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
+          <StaggerGrid
+            as="ul"
+            className="mt-6 grid list-none grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4"
+          >
             {spotlightProducts.map((product) => (
               <CatalogProductCard key={product.id} product={product} />
             ))}
-          </div>
+          </StaggerGrid>
         </section>
       ) : null}
 
@@ -113,13 +121,13 @@ export default async function Home() {
           title="Pourquoi choisir Raaga ?"
           description="Des fondations locales pour un e-commerce qui tient la route au quotidien."
         />
-        <div className="mt-8 grid gap-4 md:grid-cols-3">
+        <StaggerGrid as="ul" className="mt-8 grid list-none gap-4 md:grid-cols-3" staggerMs={80}>
           {appHighlights.map((item, i) => {
             const Icon = highlightMeta[i]?.icon ?? Sparkles;
             return (
               <article
                 key={item.title}
-                className="flex gap-4 rounded-2xl border border-border/80 bg-card p-5 shadow-sm ring-1 ring-black/[0.03] transition hover:border-brand/20"
+                className="flex gap-4 rounded-2xl border border-border/80 bg-card p-5 shadow-sm ring-1 ring-black/[0.03] transition duration-300 hover:-translate-y-0.5 hover:border-brand/25 hover:shadow-md"
               >
                 <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-orange-50 text-brand ring-1 ring-orange-100">
                   <Icon className="h-6 w-6" strokeWidth={2} aria-hidden />
@@ -131,7 +139,7 @@ export default async function Home() {
               </article>
             );
           })}
-        </div>
+        </StaggerGrid>
       </section>
     </div>
   );

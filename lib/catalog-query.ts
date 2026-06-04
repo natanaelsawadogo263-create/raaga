@@ -53,7 +53,7 @@ export function filterAndSortCatalog(
   if (lower) {
     list = list.filter((p) => {
       const name = p.name.toLowerCase();
-      const cat = p.category.toLowerCase();
+      const cat = (p.category ?? "").trim().toLowerCase();
       const city = p.city.toLowerCase();
       const desc = p.description.toLowerCase();
       return name.includes(lower) || cat.includes(lower) || city.includes(lower) || desc.includes(lower);
@@ -61,7 +61,7 @@ export function filterAndSortCatalog(
   }
   if (state.cat) {
     const want = state.cat.trim().toLowerCase();
-    list = list.filter((p) => p.category.trim().toLowerCase() === want);
+    list = list.filter((p) => (p.category ?? "").trim().toLowerCase() === want);
   }
   if (state.min != null) {
     list = list.filter((p) => p.price >= state.min!);

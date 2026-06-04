@@ -122,7 +122,7 @@ export async function createProductAction(formData: FormData) {
   const stock_quantity = parseIntSafe(String(formData.get("stock_quantity") ?? "0"), 0);
   const low_stock_threshold = parseIntSafe(String(formData.get("low_stock_threshold") ?? "5"), 5);
   const status = parseStatus(String(formData.get("status") ?? "normal"));
-  const is_active = formData.get("is_active") === "on";
+  const is_active = formData.has("is_active") ? formData.get("is_active") === "on" : true;
   const is_heavy = formData.get("is_heavy") === "on";
   const image_urls_raw = String(formData.get("image_urls") ?? "").trim();
   const variant_options = parseVariantOptions(String(formData.get("variant_options") ?? ""));
@@ -234,7 +234,7 @@ export async function updateProductAction(formData: FormData) {
   const stock_quantity = parseIntSafe(String(formData.get("stock_quantity") ?? "0"), 0);
   const low_stock_threshold = parseIntSafe(String(formData.get("low_stock_threshold") ?? "5"), 5);
   const status = parseStatus(String(formData.get("status") ?? "normal"));
-  const is_active = formData.get("is_active") === "on";
+  const is_active = formData.has("is_active") ? formData.get("is_active") === "on" : true;
   const is_heavy = formData.get("is_heavy") === "on";
   const variant_options = parseVariantOptions(String(formData.get("variant_options") ?? ""));
 

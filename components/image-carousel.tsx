@@ -39,10 +39,9 @@ export function ImageCarousel({
   stageClassName,
   emptySlot,
 }: ImageCarouselProps) {
-  const { safe, active, setActive, goPrev, goNext, multi, count, current, setThumbRef } =
-    useImageCarousel(images);
+  const { safe, active, setActive, goPrev, goNext, multi, count, setThumbRef } = useImageCarousel(images);
 
-  if (!current) {
+  if (!safe.length) {
     return <div className={className}>{emptySlot}</div>;
   }
 
@@ -69,14 +68,20 @@ export function ImageCarousel({
           }
         }}
       >
-        <Image
-          src={current}
-          alt={getMainAlt(active, count)}
-          fill
-          priority={priority}
-          sizes={mainSizes}
-          className="object-cover"
-        />
+        {safe.map((url, i) => (
+          <Image
+            key={`${url}-${i}`}
+            src={url}
+            alt={i === active ? getMainAlt(active, count) : ""}
+            fill
+            priority={priority && i === 0}
+            sizes={mainSizes}
+            aria-hidden={i !== active}
+            className={`object-cover transition-opacity duration-500 ease-out ${
+              i === active ? "opacity-100" : "opacity-0"
+            }`}
+          />
+        ))}
         {multi ? (
           <>
             <div

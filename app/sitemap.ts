@@ -1,23 +1,15 @@
 import type { MetadataRoute } from "next";
+import { fetchSitemapProducts } from "@/lib/sitemap-products";
+import { siteUrl } from "@/lib/site-url";
 
-/**
- * `app/sitemap.ts` est une convention Next.js 16 : Next génère
- * automatiquement `/sitemap.xml`. On y déclare uniquement les routes
- * publiques que l'on veut voir indexer (les routes admin / livreur /
- * compte privé sont déjà exclues côté `robots.txt`).
- *
- * Pour étendre avec des fiches produits dynamiques, il suffira d'ajouter
- * une requête Supabase qui pousse les `/produits/{id}` dans le tableau.
- */
-function siteUrl(): string {
-  const explicit = process.env.NEXT_PUBLIC_SITE_URL?.trim();
-  if (explicit) return explicit.replace(/\/+$/, "");
-  const vercel = process.env.VERCEL_URL?.trim();
-  if (vercel) return vercel.startsWith("http") ? vercel.replace(/\/+$/, "") : `https://${vercel}`;
-  return "http://localhost:3000";
-}
+/** Régénération périodique (produits dynamiques). */
+export const revalidate = 3600;
 
-const PUBLIC_ROUTES: { path: string; priority: number; changefreq: "daily" | "weekly" | "monthly" }[] = [
+const STATIC_ROUTES: {
+  path: string;
+  priority: number;
+  changefreq: NonNullable<MetadataRoute.Sitemap[number]["changeFrequency"]>;
+}[] = [
   { path: "/", priority: 1, changefreq: "daily" },
   { path: "/produits", priority: 0.95, changefreq: "daily" },
   { path: "/promo", priority: 0.85, changefreq: "daily" },
@@ -29,13 +21,24 @@ const PUBLIC_ROUTES: { path: string; priority: number; changefreq: "daily" | "we
   { path: "/inscription-livreur", priority: 0.5, changefreq: "monthly" },
 ];
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = siteUrl();
   const now = new Date();
-  return PUBLIC_ROUTES.map(({ path, priority, changefreq }) => ({
+
+  const staticEntries: MetadataRoute.Sitemap = STATIC_ROUTES.map(({ path, priority, changefreq }) => ({
     url: `${base}${path}`,
     lastModified: now,
     changeFrequency: changefreq,
     priority,
   }));
+
+  const products = await fetchSitemapProducts();
+  const productEntries: MetadataRoute.Sitemap = products.map((p) => ({
+    url: `${base}/produits/${p.id}`,
+    lastModified: new Date(p.updated_at),
+    changeFrequency: "weekly",
+    priority: 0.7,
+  }));
+
+  return [...staticEntries, ...productEntries];
 }

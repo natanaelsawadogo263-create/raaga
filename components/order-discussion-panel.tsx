@@ -69,7 +69,10 @@ export function OrderDiscussionPanel({
           messages.map((msg) => {
             const isOwn = msg.sender_id === viewerUserId;
             return (
-              <div key={msg.id} className={`flex flex-col ${isOwn ? "items-end" : "items-start"}`}>
+              <div
+                key={msg.id}
+                className={`motion-safe:animate-fade-up flex flex-col ${isOwn ? "items-end" : "items-start"}`}
+              >
                 <p className="mb-0.5 text-[10px] font-semibold text-muted-foreground">
                   {formatMessageSenderLabel(msg, viewerUserId)} · {formatDiscussionMessageDate(msg.created_at)}
                 </p>

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import type { DiscussionSenderRole } from "@/lib/order-discussion";
+import type { DiscussionSenderRole, OrderDiscussionMessage } from "@/lib/order-discussion";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -18,6 +18,33 @@ function resolveSenderRole(profileRole: string | undefined): DiscussionSenderRol
     return "customer";
   }
   return null;
+}
+
+/** Rafraîchissement des messages (polling côté client). */
+export async function refreshOrderDiscussionMessagesAction(
+  discussionId: string,
+): Promise<OrderDiscussionMessage[]> {
+  if (!UUID_RE.test(discussionId)) {
+    return [];
+  }
+
+  const supabase = await getSupabaseServerClient();
+  const { data: authData } = await supabase.auth.getUser();
+  if (!authData.user?.id) {
+    return [];
+  }
+
+  const { data: messages, error } = await supabase
+    .from("order_discussion_messages")
+    .select("id, body, sender_role, sender_id, created_at")
+    .eq("discussion_id", discussionId)
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    return [];
+  }
+
+  return (messages ?? []) as OrderDiscussionMessage[];
 }
 
 export async function sendOrderDiscussionMessageAction(formData: FormData) {

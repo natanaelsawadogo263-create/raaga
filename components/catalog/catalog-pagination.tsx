@@ -21,7 +21,7 @@ export function CatalogPagination({ state, totalPages }: CatalogPaginationProps)
 
   return (
     <nav
-      className="mt-14 flex flex-col items-center gap-5 border-t border-border/75 pt-10 sm:flex-row sm:justify-between"
+      className="mt-14 flex flex-col items-center gap-5 border-t border-border/75 pt-10 motion-safe:animate-fade-in sm:flex-row sm:justify-between"
       aria-label="Pagination du catalogue"
     >
       <p className="order-2 text-sm text-muted-foreground sm:order-1">

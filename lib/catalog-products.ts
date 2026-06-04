@@ -46,8 +46,16 @@ type ProductRowDb = {
   description: string | null;
   variant_options: unknown;
   product_images: ProductImageRow[] | null;
-  categories: { image_url: string | null } | null;
+  categories: { name: string | null; image_url: string | null } | null;
 };
+
+function resolveProductCategory(item: ProductRowDb): string {
+  const joined = item.categories?.name?.trim();
+  if (joined) {
+    return joined;
+  }
+  return (item.category ?? "").trim();
+}
 
 function parseVariantOptions(raw: unknown): { name: string; values: string[] }[] {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
@@ -118,10 +126,10 @@ function fromFeatured(): CatalogProduct[] {
 }
 
 const PRODUCT_LIST_SELECT =
-  "id, name, category, city, price_cfa, compare_at_price_cfa, stock_quantity, status, is_heavy, description, variant_options, product_images ( image_url, is_primary, sort_order ), categories ( image_url )";
+  "id, name, category, city, price_cfa, compare_at_price_cfa, stock_quantity, status, is_heavy, description, variant_options, product_images ( image_url, is_primary, sort_order ), categories ( name, image_url )";
 
 const PRODUCT_LIST_SELECT_LEGACY =
-  "id, name, category, city, price_cfa, compare_at_price_cfa, stock_quantity, status, description, variant_options, product_images ( image_url, is_primary, sort_order ), categories ( image_url )";
+  "id, name, category, city, price_cfa, compare_at_price_cfa, stock_quantity, status, description, variant_options, product_images ( image_url, is_primary, sort_order ), categories ( name, image_url )";
 
 function isMissingHeavyColumnError(message: string | undefined): boolean {
   if (!message) return false;
@@ -175,12 +183,13 @@ function mapRowsToCatalog(rows: ProductRowDb[]): CatalogProduct[] {
   return rows.map((item) => {
     const imgs = item.product_images;
     const primary = pickPrimaryImage(imgs);
+    const category = resolveProductCategory(item);
     const catCover = item.categories?.image_url?.trim() || null;
-    const fallback = categoryFallbackImage(item.category);
+    const fallback = categoryFallbackImage(category);
     return {
       id: item.id,
       name: item.name,
-      category: item.category,
+      category,
       city: item.city,
       description: item.description ?? "",
       price: item.price_cfa,
@@ -203,18 +212,12 @@ export async function fetchHomeSpotlightProducts(limit = 8): Promise<CatalogProd
     return fromFeatured().slice(0, limit);
   }
 
-  const { data, error } = await supabase
-    .from("products")
-    .select(PRODUCT_LIST_SELECT)
-    .eq("is_active", true)
-    .order("created_at", { ascending: false })
-    .limit(limit);
-
-  if (error || data == null) {
-    return fromFeatured().slice(0, limit);
+  const { rows, error } = await fetchActiveProductRows(supabase, limit);
+  if (error || rows == null) {
+    return [];
   }
 
-  return mapRowsToCatalog(data as unknown as ProductRowDb[]);
+  return mapRowsToCatalog(rows);
 }
 
 export async function fetchCatalogProducts(): Promise<CatalogProduct[]> {
@@ -223,18 +226,12 @@ export async function fetchCatalogProducts(): Promise<CatalogProduct[]> {
     return fromFeatured();
   }
 
-  const { data, error } = await supabase
-    .from("products")
-    .select(PRODUCT_LIST_SELECT)
-    .eq("is_active", true)
-    .order("created_at", { ascending: false })
-    .limit(1000);
-
-  if (error || data == null) {
-    return fromFeatured();
+  const { rows, error } = await fetchActiveProductRows(supabase);
+  if (error || rows == null) {
+    return [];
   }
 
-  return mapRowsToCatalog(data as unknown as ProductRowDb[]);
+  return mapRowsToCatalog(rows);
 }
 
 export async function fetchProductById(id: string): Promise<CatalogProductDetail | null> {
@@ -278,6 +275,7 @@ export async function fetchProductById(id: string): Promise<CatalogProductDetail
   }
 
   const row = data as unknown as ProductRowDb;
+  const category = resolveProductCategory(row);
   const imgs = row.product_images ?? [];
   const sortedUrls = [...imgs]
     .sort((a, b) => {
@@ -289,14 +287,14 @@ export async function fetchProductById(id: string): Promise<CatalogProductDetail
     .map((i) => i.image_url);
 
   const catCover = row.categories?.image_url?.trim() || null;
-  const fallback = categoryFallbackImage(row.category);
+  const fallback = categoryFallbackImage(category);
   const images =
     sortedUrls.length > 0 ? sortedUrls : catCover ? [catCover] : fallback ? [fallback] : [];
 
   return {
     id: row.id,
     name: row.name,
-    category: row.category,
+    category,
     city: row.city,
     description: row.description ?? "",
     price: row.price_cfa,

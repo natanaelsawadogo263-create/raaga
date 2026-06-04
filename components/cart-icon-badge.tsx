@@ -34,6 +34,19 @@ export function CartIconBadge({ isCustomer, serverCount, className }: Props) {
   }, [isCustomer]);
 
   const count = isCustomer ? serverCount : guestCount;
+  const [pop, setPop] = useState(false);
+  const [prevCount, setPrevCount] = useState(count);
+
+  useEffect(() => {
+    if (count !== prevCount) {
+      setPrevCount(count);
+      if (count > 0) {
+        setPop(true);
+        const t = window.setTimeout(() => setPop(false), 500);
+        return () => window.clearTimeout(t);
+      }
+    }
+  }, [count, prevCount]);
 
   return (
     <Link
@@ -43,7 +56,12 @@ export function CartIconBadge({ isCustomer, serverCount, className }: Props) {
     >
       <CartIcon />
       {count > 0 ? (
-        <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-brand px-1 text-[10px] font-bold text-brand-contrast">
+        <span
+          key={count}
+          className={`absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-brand px-1 text-[10px] font-bold text-brand-contrast ${
+            pop ? "motion-safe:animate-cart-badge-pop" : ""
+          }`}
+        >
           {count > 99 ? "99+" : count}
         </span>
       ) : null}

@@ -14,7 +14,7 @@ export function CatalogProductCard({ product }: { product: CatalogProduct }) {
   const href = `/produits/${product.id}`;
 
   return (
-    <article className="group/card relative flex h-full flex-col overflow-hidden rounded-2xl border border-border/65 bg-card shadow-[0_2px_8px_rgba(0,0,0,0.04),0_16px_40px_-20px_rgba(15,23,42,0.12)] ring-1 ring-black/[0.03] transition duration-300 hover:-translate-y-1 hover:border-brand/35 hover:shadow-[0_20px_48px_-16px_rgba(249,115,22,0.22)]">
+    <article className="group/card relative flex h-full flex-col overflow-hidden rounded-2xl border border-border/65 bg-card shadow-[0_2px_8px_rgba(0,0,0,0.04),0_16px_40px_-20px_rgba(15,23,42,0.12)] ring-1 ring-black/[0.03] transition duration-300 hover:-translate-y-1.5 hover:border-brand/35 hover:shadow-[0_20px_48px_-16px_rgba(249,115,22,0.28)] active:scale-[0.98]">
       <Link href={href} className="relative block aspect-square w-full overflow-hidden bg-gradient-to-br from-orange-50/80 via-muted/90 to-amber-50/50">
         {product.imageUrl ? (
           <Image

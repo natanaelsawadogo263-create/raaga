@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { CatalogProductCard } from "@/components/catalog-product-card";
+import { StaggerGrid } from "@/components/ui/stagger-grid";
 import { PageShell, btnPrimaryClass, btnSecondaryClass } from "@/components/raaga/page-shell";
 import { fetchCatalogProducts } from "@/lib/catalog-products";
 
@@ -28,11 +29,14 @@ export default async function PromoPage() {
                 <ArrowRight className="h-4 w-4" aria-hidden />
               </Link>
             </div>
-            <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 xl:grid-cols-4">
+            <StaggerGrid
+              as="ul"
+              className="mt-8 grid list-none grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 xl:grid-cols-4"
+            >
               {promoProducts.map((p) => (
                 <CatalogProductCard key={p.id} product={p} />
               ))}
-            </div>
+            </StaggerGrid>
           </section>
         ) : (
           <div className="rounded-3xl border border-dashed border-border/90 bg-muted/20 px-6 py-14 text-center">
