@@ -124,8 +124,16 @@ export function GuestPanierView() {
               {items.map((item) => {
                 const lineQty = lines.find((l) => l.product_id === item.product_id)?.quantity ?? item.quantity;
                 return (
-                  <RaCard key={item.product_id} className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-3" padding="p-4">
-                    <div className="flex min-w-0 flex-1 gap-3">
+                  <RaCard key={item.product_id} className="relative flex flex-col gap-3" padding="p-4">
+                    <button
+                      type="button"
+                      className="absolute right-3 top-3 z-10 flex h-11 w-11 items-center justify-center rounded-full border border-red-200/90 bg-white text-red-600 shadow-sm active:bg-red-50"
+                      onClick={() => removeLine(item.product_id)}
+                      aria-label={`Retirer ${item.name} du panier`}
+                    >
+                      <Trash2 className="h-5 w-5" strokeWidth={2} aria-hidden />
+                    </button>
+                    <div className="flex min-w-0 flex-1 gap-3 pr-10">
                       <CartLineThumbnail imageUrl={item.image_url ?? null} alt={item.name} />
                       <div className="min-w-0">
                         <h2 className="font-bold text-foreground">{item.name}</h2>
@@ -136,16 +144,20 @@ export function GuestPanierView() {
                         </p>
                       </div>
                     </div>
-                    <div className="flex shrink-0 flex-wrap items-center gap-2">
+                    <div className="flex w-full shrink-0 flex-col gap-2">
                       <GuestPanierLineQuantity
                         productId={item.product_id}
                         quantity={lineQty}
                         stockQuantity={item.stock_quantity}
                         onChangeQuantity={updateQuantity}
                       />
-                      <button type="button" className={`${btnDangerOutlineClass} gap-1.5 px-3`} onClick={() => removeLine(item.product_id)}>
-                        <Trash2 className="h-3.5 w-3.5" aria-hidden />
-                        Retirer
+                      <button
+                        type="button"
+                        className={`${btnDangerOutlineClass} min-h-11 w-full gap-2 text-sm`}
+                        onClick={() => removeLine(item.product_id)}
+                      >
+                        <Trash2 className="h-4 w-4" aria-hidden />
+                        Retirer du panier
                       </button>
                     </div>
                   </RaCard>

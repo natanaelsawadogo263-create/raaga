@@ -611,8 +611,17 @@ export async function updateCartItemQuantityAction(formData: FormData) {
     redirect("/connexion");
   }
 
-  if (!cartId || !Number.isFinite(quantity) || quantity <= 0) {
+  if (!cartId || !Number.isFinite(quantity)) {
     throw new Error("Mise a jour panier invalide.");
+  }
+
+  if (quantity <= 0) {
+    const { error } = await supabase.from("carts").delete().eq("id", cartId).eq("user_id", userId);
+    if (error) {
+      throw new Error(error.message);
+    }
+    revalidatePath("/panier");
+    return;
   }
 
   const { error } = await supabase

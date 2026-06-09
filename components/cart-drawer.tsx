@@ -8,6 +8,7 @@ import {
   Minus,
   Plus,
   RotateCw,
+  Trash2,
   ShieldCheck,
   Sparkles,
   Truck,
@@ -31,7 +32,11 @@ import { useCustomerCart } from "@/components/customer-cart-context";
 import { CartLineThumbnail } from "@/components/cart-line-thumbnail";
 import { IconCartPremium, IconDismiss } from "@/components/cart-drawer-icons";
 import { getGuestCartLines, RAAGA_GUEST_CART_CHANGED, setGuestCartLines } from "@/lib/guest-cart";
-import { cartQtyStepperBtnClass, cartQtyStepperWrapClass } from "@/components/raaga/page-shell";
+import {
+  btnDangerOutlineClass,
+  cartQtyStepperBtnClass,
+  cartQtyStepperWrapClass,
+} from "@/components/raaga/page-shell";
 
 async function fetchCartPayload(): Promise<CartApiResponse> {
   const res = await fetch("/api/cart", { credentials: "same-origin" });
@@ -322,50 +327,76 @@ function CartDrawerPanel() {
               <ul className="flex flex-col gap-3">
                 {data.items.map((item) => (
                   <li key={item.id}>
-                    <article className="flex gap-3.5 rounded-2xl border border-border/55 bg-card/95 p-3.5 shadow-sm ring-1 ring-black/[0.02] transition hover:border-border hover:shadow-md hover:shadow-orange-500/[0.06]">
-                      <CartLineThumbnail imageUrl={item.image_url ?? null} alt={item.name} />
-                      <div className="min-w-0 flex-1">
-                        <h3 className="text-[15px] font-bold leading-snug tracking-tight text-foreground">{item.name}</h3>
-                        <p className="mt-1.5 flex items-center gap-1 text-xs font-medium text-muted-foreground">
-                          <MapPin className="h-3.5 w-3.5 shrink-0 opacity-70" strokeWidth={2} aria-hidden />
-                          <span className="truncate">{item.city}</span>
-                        </p>
-                        <div className="mt-3 flex flex-wrap items-end justify-between gap-2">
-                          <div className="inline-flex items-center gap-2">
-                            <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Qte</span>
-                            <div className={cartQtyStepperWrapClass} role="group" aria-label="Quantité">
-                              <button
-                                type="button"
-                                className={cartQtyStepperBtnClass}
-                                onClick={() => mutateLineQuantity(item, item.quantity - 1)}
-                                disabled={pendingLineId === item.id || item.quantity <= 1}
-                                aria-label="Diminuer la quantité"
-                              >
-                                <Minus className="h-3.5 w-3.5" strokeWidth={2} aria-hidden />
-                              </button>
-                              <span className="min-w-[2rem] px-1 text-center text-sm font-black tabular-nums text-foreground">{item.quantity}</span>
-                              <button
-                                type="button"
-                                className={cartQtyStepperBtnClass}
-                                onClick={() => mutateLineQuantity(item, item.quantity + 1)}
-                                disabled={
-                                  pendingLineId === item.id || (item.stock_quantity > 0 && item.quantity >= item.stock_quantity)
-                                }
-                                aria-label="Augmenter la quantité"
-                              >
-                                <Plus className="h-3.5 w-3.5" strokeWidth={2} aria-hidden />
-                              </button>
+                    <article className="relative rounded-2xl border border-border/55 bg-card/95 p-3.5 pr-3 shadow-sm ring-1 ring-black/[0.02] transition hover:border-border hover:shadow-md hover:shadow-orange-500/[0.06]">
+                      <button
+                        type="button"
+                        className="absolute right-2 top-2 z-10 flex h-11 w-11 items-center justify-center rounded-full border border-red-200/90 bg-white text-red-600 shadow-sm transition active:scale-95 active:bg-red-50 disabled:opacity-50"
+                        onClick={() => mutateLineQuantity(item, 0)}
+                        disabled={pendingLineId === item.id}
+                        aria-label={`Retirer ${item.name} du panier`}
+                      >
+                        <Trash2 className="h-5 w-5" strokeWidth={2} aria-hidden />
+                      </button>
+
+                      <div className="flex gap-3.5 pr-10">
+                        <CartLineThumbnail imageUrl={item.image_url ?? null} alt={item.name} />
+                        <div className="min-w-0 flex-1">
+                          <h3 className="line-clamp-2 pr-1 text-[15px] font-bold leading-snug tracking-tight text-foreground">
+                            {item.name}
+                          </h3>
+                          <p className="mt-1.5 flex items-center gap-1 text-xs font-medium text-muted-foreground">
+                            <MapPin className="h-3.5 w-3.5 shrink-0 opacity-70" strokeWidth={2} aria-hidden />
+                            <span className="truncate">{item.city}</span>
+                          </p>
+                          <div className="mt-3 flex items-end justify-between gap-3">
+                            <div className="inline-flex items-center gap-2">
+                              <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Qte</span>
+                              <div className={cartQtyStepperWrapClass} role="group" aria-label="Quantité">
+                                <button
+                                  type="button"
+                                  className={cartQtyStepperBtnClass}
+                                  onClick={() => mutateLineQuantity(item, item.quantity - 1)}
+                                  disabled={pendingLineId === item.id}
+                                  aria-label={item.quantity <= 1 ? "Retirer du panier" : "Diminuer la quantité"}
+                                >
+                                  <Minus className="h-3.5 w-3.5" strokeWidth={2} aria-hidden />
+                                </button>
+                                <span className="min-w-[2rem] px-1 text-center text-sm font-black tabular-nums text-foreground">
+                                  {item.quantity}
+                                </span>
+                                <button
+                                  type="button"
+                                  className={cartQtyStepperBtnClass}
+                                  onClick={() => mutateLineQuantity(item, item.quantity + 1)}
+                                  disabled={
+                                    pendingLineId === item.id ||
+                                    (item.stock_quantity > 0 && item.quantity >= item.stock_quantity)
+                                  }
+                                  aria-label="Augmenter la quantité"
+                                >
+                                  <Plus className="h-3.5 w-3.5" strokeWidth={2} aria-hidden />
+                                </button>
+                              </div>
+                            </div>
+                            <div className="shrink-0 text-right">
+                              <p className="text-[11px] font-medium tabular-nums text-muted-foreground">
+                                {item.price_cfa.toLocaleString("fr-FR")} FCFA / u.
+                              </p>
+                              <p className="mt-0.5 text-base font-black tabular-nums tracking-tight text-brand">
+                                {item.lineTotal.toLocaleString("fr-FR")}{" "}
+                                <span className="text-xs font-bold text-brand/85">FCFA</span>
+                              </p>
                             </div>
                           </div>
-                          <div className="text-right">
-                            <p className="text-[11px] font-medium tabular-nums text-muted-foreground">
-                              {item.price_cfa.toLocaleString("fr-FR")} FCFA / u.
-                            </p>
-                            <p className="mt-0.5 text-base font-black tabular-nums tracking-tight text-brand">
-                              {item.lineTotal.toLocaleString("fr-FR")}{" "}
-                              <span className="text-xs font-bold text-brand/85">FCFA</span>
-                            </p>
-                          </div>
+                          <button
+                            type="button"
+                            className={`${btnDangerOutlineClass} mt-3 w-full min-h-11 gap-2 text-sm`}
+                            onClick={() => mutateLineQuantity(item, 0)}
+                            disabled={pendingLineId === item.id}
+                          >
+                            <Trash2 className="h-4 w-4 shrink-0" strokeWidth={2} aria-hidden />
+                            Retirer du panier
+                          </button>
                         </div>
                       </div>
                     </article>

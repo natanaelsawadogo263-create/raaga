@@ -22,8 +22,7 @@ export function GuestPanierLineQuantity({ productId, quantity, stockQuantity, on
         type="button"
         className={cartQtyStepperBtnClass}
         onClick={() => onChangeQuantity(productId, q - 1)}
-        disabled={q <= 1}
-        aria-label="Diminuer la quantité"
+        aria-label={q <= 1 ? "Retirer du panier" : "Diminuer la quantité"}
       >
         <Minus className="h-3.5 w-3.5" strokeWidth={2} aria-hidden />
       </button>

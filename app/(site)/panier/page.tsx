@@ -91,8 +91,18 @@ export default async function PanierPage() {
           <div className="grid gap-6 lg:grid-cols-[1fr_min(100%,320px)] lg:items-start">
             <div className="mx-auto w-full max-w-xl space-y-3 lg:mx-0">
               {enriched.map((item) => (
-                <RaCard key={item.id} className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-3" padding="p-4">
-                  <div className="flex min-w-0 flex-1 gap-3">
+                <RaCard key={item.id} className="relative flex flex-col gap-3" padding="p-4">
+                  <form action={removeFromCartAction} className="absolute right-3 top-3 z-10">
+                    <input type="hidden" name="cart_id" value={item.id} />
+                    <button
+                      type="submit"
+                      className="flex h-11 w-11 items-center justify-center rounded-full border border-red-200/90 bg-white text-red-600 shadow-sm active:bg-red-50"
+                      aria-label={`Retirer ${item.product.name} du panier`}
+                    >
+                      <Trash2 className="h-5 w-5" strokeWidth={2} aria-hidden />
+                    </button>
+                  </form>
+                  <div className="flex min-w-0 flex-1 gap-3 pr-10">
                     <CartLineThumbnail imageUrl={item.imageUrl} alt={item.product.name} />
                     <div className="min-w-0">
                       <h2 className="font-bold text-foreground">{item.product.name}</h2>
@@ -103,16 +113,15 @@ export default async function PanierPage() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex shrink-0 flex-wrap items-center gap-2">
+                  <div className="flex w-full shrink-0 flex-col gap-2">
                     <div className={cartQtyStepperWrapClass} role="group" aria-label="Quantité">
                       <form action={updateCartItemQuantityAction} className="contents">
                         <input type="hidden" name="cart_id" value={item.id} />
                         <input type="hidden" name="quantity" value={item.quantity - 1} />
                         <button
                           type="submit"
-                          disabled={item.quantity <= 1}
                           className={cartQtyStepperBtnClass}
-                          aria-label="Diminuer la quantité"
+                          aria-label={item.quantity <= 1 ? "Retirer du panier" : "Diminuer la quantité"}
                         >
                           <Minus className="h-3.5 w-3.5" strokeWidth={2} aria-hidden />
                         </button>
@@ -131,11 +140,11 @@ export default async function PanierPage() {
                         </button>
                       </form>
                     </div>
-                    <form action={removeFromCartAction}>
+                    <form action={removeFromCartAction} className="w-full">
                       <input type="hidden" name="cart_id" value={item.id} />
-                      <button type="submit" className={`${btnDangerOutlineClass} gap-1.5 px-3`}>
-                        <Trash2 className="h-3.5 w-3.5" aria-hidden />
-                        Retirer
+                      <button type="submit" className={`${btnDangerOutlineClass} min-h-11 w-full gap-2 text-sm`}>
+                        <Trash2 className="h-4 w-4" aria-hidden />
+                        Retirer du panier
                       </button>
                     </form>
                   </div>
